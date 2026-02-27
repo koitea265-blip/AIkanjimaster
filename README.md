@@ -1,0 +1,2 @@
+# AIkanjimaster
+ＡＩかん字マスター
