@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ＡＩかん字マスター</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=block" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #fffbeb;
+      --ink-black: #1e293b;
+      --ink-blue: #0ea5e9;
+      --grid-line: #bae6fd;
+      --btn-shadow: #0f172a20;
+    }
+    body {
+      font-family: 'Klee One', "UD デジタル 教科書体 N-R", "UD Digi Kyokasho N-R", "HG正楷書体-PRO", "HGKyokashotai", serif; 
+      font-weight: 600;
+      background-color: var(--bg-color);
+      color: #334155;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      touch-action: none;
+      opacity: 0; 
+      transition: opacity 0.5s ease-in-out;
+    }
+    
+    .kyokasho { font-family: inherit; }
+    
+    .kanji-grid {
+      position: relative;
+      background-color: #ffffff;
+      border: 4px solid #cbd5e1;
+      border-radius: 1.5rem;
+      box-shadow: 0 8px 20px var(--btn-shadow);
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    .grid-line-v {
+      position: absolute; top: 0; left: 50%; width: 0; height: 100%;
+      border-left: 2px dashed var(--grid-line);
+      pointer-events: none; z-index: 1;
+    }
+    .grid-line-h {
+      position: absolute; top: 50%; left: 0; width: 100%; height: 0;
+      border-top: 2px dashed var(--grid-line);
+      pointer-events: none; z-index: 1;
+    }
+    .reading-card {
+      border-radius: 1.25rem;
+      border: 3px solid var(--grid-line);
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 6.8rem;
+      box-shadow: 0 4px 10px var(--btn-shadow);
+      flex-shrink: 0;
+    }
+    .reading-columns {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: center;
+      gap: 0.25rem;
+      flex: 1;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .vertical-text {
+      writing-mode: vertical-rl;
+      font-weight: 800;
+      line-height: 1.4;
+      font-size: 1.25rem;
+      white-space: nowrap;
+      letter-spacing: 0.1em;
+    }
+    .btn-action {
+      transition: all 0.1s ease;
+      border-bottom-width: 6px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-action:active { transform: translateY(4px); border-bottom-width: 2px; }
+    .grade-btn {
+      width: 32px; height: 32px; border-radius: 50%; font-size: 0.9rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+      border-bottom: 3px solid #00000020;
+    }
+    .grade-btn.active {
+      background-color: #6366f1; color: white; transform: scale(1.1); border-bottom: 3px solid #4338ca;
+    }
+    #speedSlider {
+      -webkit-appearance: none; width: 100%; height: 16px; border-radius: 8px;
+      background: #e2e8f0; outline: none; transition: background 0.1s;
+    }
+    #speedSlider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 34px; height: 34px; background: #ffffff;
+      border-radius: 50%; cursor: pointer; border: 4px solid #38bdf8; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .locked { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; transition: all 0.3s; }
+    .scroll-hide::-webkit-scrollbar { display: none; }
+    .info-stroke-path { stroke: #334155; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .bg-stroke-path { stroke: #f1f5f9; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .stroke-path { stroke: #000000; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    #confettiCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+  </style>
+</head>
+<body id="appBody" class="p-1 md:p-2 box-border">
+  <canvas id="confettiCanvas"></canvas>
+
+  <div id="excellentPopup" class="fixed inset-0 pointer-events-none z-[200] flex items-center justify-center opacity-0 scale-50 transition-all duration-500">
+    <div class="bg-white/95 backdrop-blur-sm px-8 py-6 rounded-3xl shadow-2xl border-4 border-emerald-400 transform -rotate-2">
+      <span class="text-4xl md:text-7xl font-black text-emerald-500 drop-shadow-sm tracking-widest leading-none">💮よくできました</span>
+    </div>
+  </div>
+
+  <header class="h-16 shrink-0 flex items-center justify-between bg-white px-4 rounded-xl shadow-sm border-b-4 border-slate-200 mb-2 z-10 relative overflow-x-auto scroll-hide">
+    <div class="flex-1 flex items-center justify-center gap-4 md:gap-8 min-w-max">
+      <h1 class="text-xl md:text-3xl font-black text-indigo-600 tracking-tighter shrink-0 drop-shadow-sm">ＡＩかん字マスター</h1>
+      
+      <div class="flex items-center gap-3">
+        <div id="gradeButtons" class="flex gap-1.5 bg-slate-100 p-1.5 rounded-full shadow-inner">
+          <button onclick="changeGrade(1)" id="gb1" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">1</button>
+          <button onclick="changeGrade(2)" id="gb2" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">2</button>
+          <button onclick="changeGrade(3)" id="gb3" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">3</button>
+          <button onclick="changeGrade(4)" id="gb4" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">4</button>
+          <button onclick="changeGrade(5)" id="gb5" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">5</button>
+          <button onclick="changeGrade(6)" id="gb6" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">6</button>
+        </div>
+
+        <div class="flex items-center gap-1 bg-slate-100 p-1.5 rounded-full border-2 border-transparent focus-within:border-indigo-300 transition-all shadow-inner">
+          <input type="text" id="searchInput" maxlength="1" placeholder="さがす" class="w-10 md:w-14 bg-transparent text-center font-black text-indigo-600 focus:outline-none placeholder:text-slate-300">
+          <button id="searchBtn" class="bg-indigo-500 text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-indigo-600 active:scale-90 transition-all shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-amber-100 text-amber-600 px-3 py-1.5 rounded-full font-black text-sm shadow-inner shrink-0 ml-3">
+      🏆 <span id="masterTotalCount">0</span>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col md:flex-row gap-2 md:gap-3 min-h-0 overflow-hidden z-10 relative">
+    <section class="flex-1 bg-white rounded-3xl shadow-lg border-4 border-sky-100 flex flex-col p-3 overflow-hidden relative">
+      <div id="infoFrame" class="absolute inset-0 flex flex-col p-3 transition-opacity duration-300">
+        <div class="text-center shrink-0 mb-2 mt-0" id="currentGradeLabelContainer">
+          <div id="currentGradeLabel" class="text-indigo-500 font-black text-lg md:text-xl tracking-widest leading-none">１ねんせいでならうかん字</div>
+        </div>
+
+        <div id="infoLabel" class="flex justify-end items-center mb-1 shrink-0">
+          <div class="bg-indigo-600 px-5 py-2 rounded-2xl text-white shadow-md flex items-baseline gap-1">
+            <span id="strokeCountText" class="text-2xl md:text-3xl font-black">-</span>
+            <span class="text-sm font-bold opacity-90">画</span>
+          </div>
+        </div>
+        
+        <div class="flex-1 flex items-center justify-center min-h-0 gap-3 w-full py-1 mx-auto max-w-[800px]">
+          <div id="kunCard" class="reading-card border-sky-100 text-sky-700 h-full max-h-[420px]">
+            <span class="text-xs font-black my-2 bg-sky-50 text-sky-600 px-3 py-1 rounded-full border border-sky-200 shrink-0">くんよみ</span>
+            <div id="kunReadings" class="reading-columns scroll-hide w-full flex-1"></div>
+          </div>
+          
+          <div class="h-full aspect-square max-h-[420px] flex-shrink-0">
+            <div class="kanji-grid border-slate-100">
+              <div class="grid-line-v"></div><div class="grid-line-h"></div>
+              <svg id="infoKanjiSvg" viewBox="0 0 109 109" class="w-full h-full absolute inset-0 z-10"></svg>
+            </div>
+          </div>
+          
+          <div id="onCard" class="reading-card border-rose-100 text-rose-700 h-full max-h-[420px]">
+            <span class="text-xs font-black my-2 bg-rose-50 text-rose-600 px-3 py-1 rounded-full border border-rose-200 shrink-0">おんよみ</span>
+            <div id="onReadings" class="reading-columns scroll-hide w-full flex-1"></div>
+          </div>
+        </div>
+
+        <div id="practiceControls" class="mt-2 shrink-0 flex flex-col gap-1">
+          <button id="submitBtn" class="bg-sky-400 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-sky-600 btn-action hover:bg-sky-500">
+            つぎの かん字 ➡
+          </button>
+          <button id="showAnimeBtn" class="hidden bg-rose-500 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-rose-700 btn-action hover:bg-rose-600 animate-pulse">
+            👀 かきじゅんをみる
+          </button>
+        </div>
+      </div>
+
+      <div id="animeFrame" class="hidden absolute inset-0 flex flex-col bg-sky-50 z-20 p-3">
+        <div class="flex justify-between items-center mb-2 shrink-0">
+          <span class="text-xs font-bold text-sky-500 bg-white px-3 py-1 rounded-full shadow-sm">かきじゅん</span>
+          <button id="closeAnimeBtn" class="bg-white text-slate-500 px-3 py-1 rounded-full font-bold text-xs border-2 border-slate-200 hover:text-rose-500 shadow-sm">✕ もどる</button>
+        </div>
+        <div class="flex-1 flex items-center justify-center min-h-0 w-full py-1">
+          <div class="h-full aspect-square max-h-[420px]">
+            <div class="kanji-grid border-sky-300 bg-white">
+              <div class="grid-line-v"></div><div class="grid-line-h"></div>
+              <svg id="animeSvg" viewBox="0 0 109 109" class="w-full h-full relative z-10">
+                <g id="animeBgGroup"></g>
+                <g id="strokeGroup"></g>
+                <g id="numberGroup"></g>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2 bg-white p-3 rounded-xl shadow-sm border-2 border-sky-100 flex flex-col gap-2 shrink-0">
+          <div class="flex items-center gap-4 w-full">
+            <button id="playBtn" class="shrink-0 bg-sky-400 text-white w-12 h-12 rounded-full font-bold text-2xl flex items-center justify-center shadow-lg border-b-4 border-sky-600 btn-action">▶</button>
+            <div class="flex-1 flex flex-col">
+              <input type="range" id="speedSlider" min="1" max="10" value="5" class="w-full">
+              <div class="flex justify-between text-[10px] text-sky-400 font-bold mt-1 px-1">
+                <span>🐢 ゆっくり</span>
+                <span>はやい 🐇</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button id="skipToNextBtn" class="mt-2 bg-sky-400 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-sky-600 btn-action hover:bg-sky-500 shrink-0">
+          つぎの かん字 ➡
+        </button>
+      </div>
+    </section>
+
+    <section id="writeSection" class="flex-1 bg-white rounded-3xl shadow-lg border-4 border-orange-100 flex flex-col p-3 relative overflow-hidden">
+      <div class="flex justify-between items-center mb-1 shrink-0">
+        <span class="text-xs font-bold text-orange-400 tracking-widest bg-orange-50 px-3 py-1 rounded-full">なぞりがき</span>
+        <span id="testStatus" class="text-xs font-black text-slate-400 bg-slate-100 px-3 py-1 rounded-full shadow-inner">ロック中 🔒</span>
+      </div>
+      
+      <div id="writeArea" class="flex-1 flex items-center justify-center min-h-0 relative locked w-full py-1">
+        <div class="h-full aspect-square max-h-[420px]">
+          <div id="writeGrid" class="kanji-grid border-orange-300">
+            <div class="grid-line-v"></div><div class="grid-line-h"></div>
+            <canvas id="guideCanvas" class="absolute inset-0 z-0 w-full h-full"></canvas>
+            <canvas id="inkCanvas" class="absolute inset-0 z-10 w-full h-full"></canvas>
+            <canvas id="writeCanvas" class="absolute inset-0 z-20 touch-none w-full h-full cursor-crosshair"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-2 flex gap-2 shrink-0">
+        <button id="clearBtn" class="flex-[1] bg-orange-50 text-orange-500 py-2 rounded-xl font-bold border-b-6 border-orange-200 btn-action locked flex flex-col leading-tight">
+          <span class="text-base">やりなおし</span>
+          <span class="text-[10px] opacity-70">最初から</span>
+        </button>
+        <button id="startPracticeBtn" class="flex-[2] bg-orange-400 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-orange-600 btn-action hover:bg-orange-500">
+          れんしゅうする！
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="h-32 md:h-36 shrink-0 bg-white border-t-4 border-slate-100 flex flex-col px-3 py-1 z-10 relative">
+    <div class="flex-1 flex items-center gap-3 min-h-0">
+      <div class="flex flex-col items-center shrink-0">
+        <div class="bg-amber-100 text-amber-600 border-b-4 border-amber-300 rounded-xl px-3 py-1.5 font-black text-xs text-center shadow-sm">
+          マスターした<br>かん字
+        </div>
+        <div id="gradeProgress" class="mt-1 text-[10px] font-black text-slate-500 tracking-tighter">
+          - / - 字
+        </div>
+      </div>
+      <div id="masteredList" class="flex-1 flex flex-wrap gap-1.5 overflow-y-auto h-full content-start items-start py-1 scroll-hide"></div>
+      <div class="shrink-0">
+        <button id="resetAllBtn" class="text-[9px] text-slate-300 hover:text-rose-400 underline font-bold px-1">リセット</button>
+      </div>
+    </div>
+    <div class="text-center text-[9px] text-slate-300 font-bold py-0.5 select-none pointer-events-none">
+      ©2026　ＡＩかん字マスター　ＩＣＴ支援の杜
+    </div>
+  </footer>
+
+  <script>
+    // 学習指導要領 準拠 1,026文字データ
+    // circleマーカーを出すための追加の読みデータを含みます
+    const KANJI_DATA_RAW = `
+1年生一イチ、イッひと（つ）
+1年生右ウ、ユウみぎ
+1年生雨ウあめ、あま
+1年生円エンまる（い）
+1年生王オウ-
+1年生音オン、インね、おと
+1年生下カ、ゲした、しも、もと、さ（げる）、さ（がる）、くだ（る）、くだ（す）、くだ（さる）、お（ろす）、お（りる）
+1年生火カひ、ほ
+1年生花カはな
+1年生貝-かい
+1年生学ガクまな（ぶ）
+1年生気キ、ケ-
+1年生九キュウ、クここの（つ）
+1年生休キュウやす（む）、やす（まる）、やす（める）
+1年生玉ギョクたま
+1年生金キン、コンかね、かな
+1年生空クウそら、あ（く）、あ（ける）、から
+1年生月ゲツ、ガツつき
+1年生犬ケンいぬ
+1年生見ケンみ（る）、み（える）、み（せる）
+1年生五ゴいつ（つ）
+1年生口コウ、クくち
+1年生校コウ-
+1年生左サひだり
+1年生三サンみ（つ）
+1年生山サンやま
+1年生子シ、スこ
+1年生四シよ（つ）、よん
+1年生糸シいと
+1年生字ジあざ
+1年生耳ジみみ
+1年生七シチなな（つ）
+1年生車シャくるま
+1年生手シュて、た
+1年生十ジュウ、ジッとお
+1年生出シュツ、スイで（る）、だ（す）
+1年生女ジョ、ニョおんな、め
+1年生小ショウちい（さい）、こ、お
+1年生上ジョウ、ショウうえ、うわ、かみ、あ（げる）、あ（がる）、のぼ（る）、のぼ（せる）、のぼ（す）
+1年生森シンもり
+1年生人ジン、ニンひと
+1年生水スイみず
+1年生正セイ、ショウただ（しい）、ただ（す）、まさ
+1年生生セイ、ショウい（きる）、い（かす）、い（ける）、う（まれる）、う（む）、お（いる）、は（える）、は（やす）、き、なま
+1年生青セイ、ショウあお
+1年生夕セキゆう
+1年生石セキ、シャク、コクいし
+1年生赤セキ、シャクあか
+1年生千センち
+1年生川センかわ
+1年生先センさき
+1年生早ソウ、サッはや（い）、はや（める）
+1年生草ソウくさ
+1年生足ソクあし、た（る）、た（りる）、た（す）
+1年生村ソンむら
+1年生大ダイ、タイおお（きい）、おお（いに）
+1年生男ダン、ナンおとこ
+1年生竹チクたけ
+1年生中チュウなか
+1年生虫チュウむし
+1年生町チョウまち
+1年生天テンあめ、あま
+1年生田デンた
+1年生土ド、ドトつち
+1年生二ニふた（つ）
+1年生日ニチ、ジツひ、か
+1年生入ニュウ、ジュはい（る）、い（れる）
+1年生年ネンとし
+1年生白ハク、ビャクしろ、しら
+1年生八ハチや（つ）
+1年生百ヒャク-
+1年生文ブン、モンふみ
+1年生木ボク、モクき、こ
+1年生本ホンもと
+1年生名メイ、ミョウな
+1年生目モク、ボクめ、ま
+1年生立リツ、リュウた（つ）、た（てる）
+1年生力リョク、リキちから
+1年生林リンはやし
+1年生六ロクむ（つ）
+2年生引インひ（く）、ひ（ける）
+2年生羽ウはね、は
+2年生雲ウンくも
+2年生園エンその
+2年生遠エン、オンとお（い）
+2年生何カなに、なん
+2年生科カ-
+2年生夏カなつ
+2年生家カ、ケいえ、や
+2年生歌カうた、うた（う）
+2年生画ガ、カえが（く）
+2年生回カイ、エまわ（る）、まわ（す）
+2年生会カイ、エあ（う）
+2年生海カイうみ
+2年生絵カイ、エ-
+2年生外ガイ、ゲそと、ほか、はず（す）、はず（れる）
+2年生角カクかど、つの
+2年生楽ガク、ラクたの（しい）、たの（しむ）
+2年生活カツ-
+2年生間カン、ケンあいだ、ま
+2年生丸ガンまる（い）、まる（める）
+2年生岩ガンいわ
+2年生顔ガンかお
+2年生汽キ-
+2年生記キしる（す）
+2年生帰キかえ（る）、かえ（す）
+2年生弓キュウゆみ
+2年生牛ギュウうし
+2年生魚ギョうお、さかな
+2年生京キョウ、ケイみやこ
+2年生強キョウ、ゴウつよ（い）、つよ（まる）、つよ（める）、し（いる）
+2年生教キョウおし（える）、おそ（わる）
+2年生近キンちか（い）
+2年生兄キョウ、ケイあに
+2年生形ケイ、ギョウかたち、なり
+2年生計ケイはか（る）、はか（らう）
+2年生元ゲン、ガンもと
+2年生言ゲン、ゴンい（う）、こと
+2年生原ゲンはら
+2年生戸コと
+2年生古コふる（い）、ふる（める）、ふる（まる）
+2年生午ゴ-
+2年生後ゴ、コウのち、うしろ、あと、おく（れる）
+2年生語ゴかた（る）、かた（らう）
+2年生工コウ、ク-
+2年生公コウおおやけ
+2年生広コウひろ（い）、ひろ（まる）、ひろ（める）、ひろ（がる）、ひろ（げる）
+2年生交コウまじ（わる）、まじ（える）、ま（じる）、ま（ざる）、ま（ぜる）、か（う）、か（わす）
+2年生光コウひか（る）、ひかり
+2年生考コウかんが（える）
+2年生行コウ、ギョウ、アンい（く）、ゆ（く）、おこな（う）
+2年生高コウたか（い）、たか（まる）、たか（める）
+2年生黄コウ、オウき、こ
+2年生合ゴウ、ガッ、カッあ（う）、あ（わす）、あ（わせる）
+2年生谷コクたに
+2年生国コクくに
+2年生黒コクくろ（い）
+2年生今コン、キンいま
+2年生才サイ-
+2年生細サイほそ（い）、こま（か）、こま（かい）
+2年生作サク、サつく（る）
+2年生算サン-
+2年生止止シと（まる）、と（める）
+2年生市シいち
+2年生矢シや
+2年生姉シあね
+2年生思シおも（う）
+2年生紙シかみ
+2年生寺ジてら
+2年生自ジ、シみずか（ら）
+2年生時ジとき
+2年生室シツむろ
+2年生社シャやしろ
+2年生弱ジャクよわ（い）、よわ（る）、よわ（まる）、よわ（める）
+2年生首シュくび
+2年生秋シュウあき
+2年生週シュウ-
+2年生春シュンはる
+2年生書ショか（く）
+2年生少ショウすく（ない）、すこ（し）
+2年生場ジョウば
+2年生色ショク、シキいろ
+2年生食ショク、ジキた（べる）、く（う）、く（らう）
+2年生心シンこころ
+2年生新シンあたら（しい）、あら（た）、あら（す）
+2年生親シンおや、した（しい）、した（しむ）
+2年生図ズ、トはか（る）
+2年生数スウ、ス、サクかず、かぞ（える）
+2年生西セイ、サイにし
+2年生声セイ、ショウこえ
+2年生星セイほし
+2年生晴セイは（れる）、は（らす）
+2年生切セツ、サイき（る）、き（れる）
+2年生雪セツゆき
+2年生船センふね、ふな
+2年生線セン-
+2年生前ゼンまえ
+2年生組ソくみ、く（む）
+2年生走ソウはし（る）
+2年生多タおお（い）
+2年生太タイ、タふと（い）、ふと（る）
+2年生体タイ、テイからだ
+2年生台ダイ、タイ-
+2年生地チ、ジ-
+2年生池チいけ
+2年生知シ（る）
+2年生茶チャ、サ-
+2年生昼チュウひる
+2年生長チョウなが（い）
+2年生鳥チョウとり
+2年生朝チョウあさ
+2年生直チョク、ジキただ（ちに）、なお（す）、なお（る）
+2年生通ツウ、ツとお（る）、とお（す）、かよ（う）
+2年生弟テイ、ダイ、デおとうと
+2年生店テンみせ
+2年生点テン-
+2年生電電デン-
+2年生刀トウかたな
+2年生冬トウふゆ
+2年生当トウあ（たる）、あ（てる）
+2年生東トウひがし
+2年生答トウこた（える）、こた（え）
+2年生頭トウ、ズ、トあたま、かしら
+2年生同ドウおな（じ）
+2年生道ドウ、トウみち
+2年生読ドク、トク、トウよ（む）
+2年生内ナイ、ダイうち
+2年生南ナン、ナみなみ
+2年生肉ニク-
+2年生馬バうま、ま
+2年生売バイう（る）、う（れる）
+2年生買バイか（う）
+2年生麦バクむぎ
+2年生半ハンなか（ば）
+2年生番番-
+2年生父フちち
+2年生風フウ、フかぜ、かざ
+2年生分ブン、フン、ブわ（ける）、わ（かれる）、わ（かる）、わ（かつ）
+2年生聞ブン、モンき（く）、き（こえる）
+2年生米ベイ、マイこめ、よね
+2年生歩ホ、フ、ブある（く）、あゆ（む）
+2年生母ボはは
+2年生方ホウかた
+2年生北ホクきた
+2年生毎マイ-
+2年生妹マイいもうと
+2年生万マン、バン-
+2年生明メイ、ミョウあ（かり）、あか（るい）、あか（るむ）、あき（らか）、あ（ける）、あ（く）、あ（かす）
+2年生鳴メイな（く）、な（る）、な（らす）
+2年生毛モウけ
+2年生門モンかど
+2年生夜ヤよる、よ
+2年生野ヤの
+2年生友ユウとも
+2年生用ヨウもち（いる）
+2年生曜ヨウ-
+2年生来ライく（る）、きた（る）、きた（す）
+2年生里リさと
+2年生理リ-
+2年生話ワはな（す）、はなし
+2年生(追加)雨ウあま
+2年生(追加)音オン、インね
+2年生(追加)下カ、ゲさ（がる）、くだ（る）
+2年生(追加)花カ-
+2年生(追加)学まな（ぶ）
+2年生(追加)休キュウやす（まる）、やす（める）
+2年生(追加)玉ギョク-
+2年生(追加)金コンかな
+2年生(追加)空あ（く）、あ（ける）、から
+2年生(追加)見ケンみ（える）、み（せる）
+2年生(追加)犬ケン-
+2年生(追加)口コウ、ク-
+2年生(追加)左サ-
+2年生(追加)山サン-
+2年生(追加)子シ、ス-
+2年生(追加)糸シ-
+2年生(追加)耳ジ-
+2年生(追加)車シャ-
+2年生(追加)手シュた
+2年生(追加)出シュツ、スイ-
+2年生(追加)女ジョ、ニョめ
+2年生(追加)小ショウ-
+2年生(追加)上ジョウ、ショウのぼ（る）、うわ,かみ
+2年生(追加)森シン-
+2年生(追加)正セイ,ショウただ（す）、まさ
+2年生(追加)生セイ,ショウは（える）、なま
+2年生(追加)青セイ,ショウ-
+2年生(追加)夕セキ-
+2年生(追加)石セキ,シャク-
+2年生(追加)赤セキ,シャク-
+2年生(追加)川セン-
+2年生(追加)先セン-
+2年生(追加)早ソウ-
+2年生(追加)草ソウ-
+2年生(追加)足ソクた（りる）
+2年生(追加)村ソン-
+2年生(追加)男ダン,ナン-
+2年生(追加)竹チク-
+2年生(追加)虫チュウ-
+2年生(追加)町チョウ-
+2年生(追加)天あめ、あま
+2年生(追加)田デン-
+2年生(追加)土ド,ドト-
+2年生(追加)白ハク,ビャクしら
+2年生(追加)文モンふみ
+2年生(追加)木ボク,モクこ
+2年生(追加)名ミョウ-
+2年生(追加)目モクま
+2年生(追加)立リツ,リュウた（てる）
+2年生(追加)力リョク,リキ-
+2年生(追加)林リン-
+3年生悪アク、オわる（い）
+3年生安アンやす（い）
+3年生暗アンくら（い）
+3年生医イ-
+3年生委イゆだ（ねる）
+3年生意イ-
+3年生育イクそだ（つ）、そだ（てる）、はぐく（む）
+3年生員イン-
+3年生院イン-
+3年生飲インの（む）
+3年生運ウンはこ（ぶ）
+3年生泳エイおよ（ぐ）
+3年生駅エキ-
+3年生央オウ-
+3年生横オウよこ
+3年生屋オクや
+3年生温オンあたた（か）、あたた（かい）、あたた（まる）、あたた（める）
+3年生化カ、ケば（ける）、ば（かす）
+3年生荷カに
+3年生界カイ-
+3年生開カイひら（く）、ひら（ける）、あ（く）、あ（ける）
+3年生階カイ-
+3年生寒カンさむ（い）
+3年生感カン-
+3年生漢カン-
+3年生館カンやかた
+3年生岸ガンきし
+3年生起オ（きる）、オ（こる）、オ（こす）
+3年生期キ、ゴ-
+3年生客キャク、カク-
+3年生究キュウきわ（める）
+3年生急キュウいそ（ぐ）
+3年生級キュウ-
+3年生宮キュウ、グウ、ク、ミヤみや
+3年生球キュウたま
+3年生去キョ、コさ（る）
+3年生橋キョウはし
+3年生業ギョウ、ゴウわざ
+3年生曲キョクま（がる）、ま（げる）
+3年生局キョク-
+3年生銀ギン-
+3年生区ク-
+3年生苦クくる（しい）、くる（しむ）、くる（しめる）、にが（い）、にが（む）
+3年生具グ-
+3年生君クンきみ
+3年生係かかり、かか（る）、かかわ（る）
+3年生軽ケイかる（い）、かろ（やか）
+3年生血ケツち
+3年生決ケツき（める）、き（まる）
+3年生研ケンと（ぐ）
+3年生県ケン-
+3年生庫コ、クくら
+3年生湖コみずうみ
+3年生向コウむ（く）、む（ける）、む（かう）、む（こう）
+3年生幸コウさいわ（い）、さち、しあわ（せ）
+3年生港コウみなと
+3年生号ゴウ-
+3年生根コンね
+3年生祭サイまつ（る）、まつ（り）
+3年生皿さら
+3年生仕シ、ジつか（える）
+3年生死シし（ぬ）
+3年生使シつか（う）
+3年生始シはじ（める）、はじ（まる）
+3年生指シゆび、さ（す）
+3年生歯シは
+3年生詩シ-
+3年生次次ジつ（ぐ）、つぎ
+3年生事ジ、ズこと
+3年生持ジも（つ）
+3年生式シキ-
+3年生実ジツ、シツみ、みの（る）
+3年生写うつ（ス）、うつ（る）
+3年生者シャもの
+3年生主シュ、スぬし、おも
+3年生守シュ、スまも（る）、もり
+3年生取シュと（る）
+3年生酒さけ、さか
+3年生受ジュう（ける）、う（かる）
+3年生州シュウ、スす
+3年生拾シュウ、ジュウひろ（う）
+3年生終お（わる）、お（える）
+3年生習なら（う）
+3年生集あつ（まる）、あつ（める）、つど（う）
+3年生住す（む）、す（まう）
+3年生重おも（い）、かさ（ねる）、かさ（なる）
+3年生宿やど、やど（る）、やど（す）
+3年生所ショところ
+3年生暑しょあつ（い）
+3年生助たす（ける）、たす（かる）、すけ
+3年生昭昭-
+3年生消き（える）、け（ス）
+3年生商あきな（う）
+3年生章章-
+3年生勝か（つ）、まさ（る）
+3年生乗の（る）、の（せる）
+3年生植う（える）、う（わる）
+3年生申もう（ス）
+3年生身み
+3年生神かみ、かん、こう
+3年生真ま
+3年生深ふか（い）、ふか（まる）、ふか（める）
+3年生進すす（む）、すす（める）
+3年生世世、セよ
+3年生整ととの（える）、ととの（う）
+3年生昔むかし
+3年生全まったく（く）、すべ（て）
+3年生相相あい
+3年生送おく（る）
+3年生想想-
+3年生息いき
+3年生速はや（い）、はや（める）、はや（まる）
+3年生族族-
+3年生他他ほか
+3年生打う（つ）
+3年生対対-
+3年生待ま（つ）
+3年生代か（わる）、か（える）、よ、しろ
+3年生第第-
+3年生題題-
+3年生炭炭すみ
+3年生短みじか（い）
+3年生談談-
+3年生着き（る）、き（せる）、つ（く）、つ（ける）
+3年生注そそ（ぐ）
+3年生柱はしら
+3年生丁丁、テイ-
+3年生帳帳-
+3年生調しら（べる）、ととの（う）、ととの（える）
+3年生追お（う）
+3年生定さだ（める）、さだ（まる）
+3年生庭にわ
+3年生笛笛テキふえ
+3年生鉄鉄テツ-
+3年生転ころ（がる）、ころ（げる）、ころ（がス）、ころ（ぶ）
+3年生都都ト、ツみやこ
+3年生度度ド、トたび、はか（る）
+3年生投な（げる）
+3年生豆豆トウ、ズまめ
+3年生島島トウしま
+3年生湯湯トウゆ
+3年生登のぼ（る）
+3年生等ひと（しい）、など
+3年生動うご（く）、うご（かす）
+3年生童わらべ
+3年生農農ノウ-
+3年生波波ハなみ
+3年生配くば（る）
+3年生倍倍バイ-
+3年生箱はこ
+3年生畑はた、はたけ
+3年生発発ハツ、ホツ-
+3年生反そ（る）、そ（らす）、かえ（す）
+3年生坂ハンさか
+3年生板いた
+3年生皮ヒかわ
+3年生悲かな（しい）、かな（しむ）
+3年生美うつく（しい）
+3年生鼻はな
+3年生筆ひつふで
+3年生氷こおり、ひ
+3年生表おもて、あらわ（ス）、あらわ（れる）
+3年生秒秒ビョウ-
+3年生病や（む）、やまい
+3年生品ヒンしな
+3年生負ま（ける）、ま（かす）、お（う）
+3年生部部ブ-
+3年生服服フク-
+3年生福福フク-
+3年生生物物ブツ、モツもの
+3年生平ヘイ、ビョウたい（ら）、ひら
+3年生返かえ（ス）、かえ（る）
+3年生勉勉ベンつと（める）
+3年生放はな（す）、はな（つ）、はな（れる）、ほう（る）
+3年生味あじ、あじ（わう）
+3年生生命いのち
+3年生面おも、おもて,つら
+3年生問と（う）、と（い）
+3年生役役ヤク、エキ-
+3年生薬薬ヤクくすり
+3年生由由ユ、ユウ、ユイよし
+3年生油ユあぶら
+3年生有あ（る）
+3年生遊あそ（ぶ）
+3年生予予ヨ-
+3年生羊羊ヨウひつじ
+3年生洋洋ヨウ-
+3年生葉葉ヨウは
+3年生陽陽ヨウ-
+3年生様さま、しょう
+3年生落お（ちる）、お（とす）
+3年生流なが（れる）、なが（ス）
+3年生旅リョたび
+3年生両両リョウ-
+3年生緑みどり、ろく
+3年生礼礼レイ、ライ-
+3年生列列レツ-
+3年生練ね（る）
+3年生路ロじ
+3年生和やわ（らぐ）、やわ（らげる）、なご（む）、なご（やか）
+3年生(追加)一イツ-
+3年生(追加)二ジ-
+3年生(追加)三み
+3年生(追加)四よん
+3年生(追加)六むい
+3年生(追加)八よう
+3年生(追加)九九ク-
+3年生(追加)十ジッ-
+3年生(追加)日ジツ-
+3年生(追加)月ガツ-
+3年生(追加)金コン-
+3年生(追加)本もと
+3年生(追加)上のぼ（る）、のぼ（せる）、のぼ（す）
+3年生(追加)下ゲくだ（る）、くだ（す）、くだ（さる）、o（ろす）、o（りる）
+3年生(追加)円まる（い）
+3年生(追加)会会エ-
+3年生(追加)合合ガッ-
+3年生(追加)交まじ（る）、まざ（る）、まぜ（る）、か（う）、かわ（ス）
+3年生(追加)分フン,ブわ（かつ）
+4年生愛アイ-
+4年生案アン-
+4年生以イ-
+4年生衣ころも
+4年生位くらい
+4年生茨いばら
+4年生印しるし
+4年生英エイ-
+4年生栄さか（える）、は（える）
+4年生媛エン-
+4年生塩しお
+4年生岡おか
+4年生億オク-
+4年生加くわ（える）、くわ（わる）
+4年生果は（たす）、は（てる）、はて
+4年生貨カ-
+4年生課カ-
+4年生芽め
+4年生賀ガ-
+4年生改あらた（める）、あらた（まる）
+4年生械カイ-
+4年生害ガイ-
+4年生街まち
+4年生各おのおの
+4年生覚おぼ（える）、さ（ます）、さ（める）
+4年生潟かた
+4年生完カン-
+4年生官カン-
+4年生管くだ
+4年生関せき、かか（わる）
+4年生観カン-
+4年生願ねが（う）
+4年生岐キ-
+4年生希キ-
+4年生季キ-
+4年生旗はた
+4年生器うつわ
+4年生機はた
+4年生議ギ-
+4年生求もと（める）
+4年生泣な（く）
+4年生給キュウ-
+4年生挙あ（げる）、あ（がる）
+4年生漁ギョ、リョウ-
+4年生共とも
+4年生協キョウ-
+4年生鏡かがみ
+4年生競きそ（う）、せ（る）
+4年生極きわ（める）、きわ（まる）、きわ（み）
+4年生熊くま
+4年生訓クン-
+4年生軍グン-
+4年生郡グン-
+4年生群む（れる）、むら（がる）、むら
+4年生径ケイ-
+4年生景ケイ-
+4年生芸ゲイ-
+4年生欠か（ける）、か（く）
+4年生結むす（ぶ）、ゆ（う）
+4年生建た（てる）、た（つ）
+4年生健すこ（やか）
+4年生験ケン-
+4年生固かた（める）、かた（まる）、かた（い）
+4年生功コウ-
+4年生好この（む）、す（く）
+4年生香か、かお（り）、かお（る）
+4年生候そうろう
+4年生康コウ-
+4年生佐サ-
+4年生差さ（す）
+4年生菜な
+4年生最もっと（も）
+4年生埼さい
+4年生材ザイ-
+4年生崎さき
+4年生昨サク-
+4年生札ふだ
+4年生刷す（る）
+4年生察サツ-
+4年生参まい（る）
+4年生産う（む）、う（まれる）、うぶ
+4年生散ち（る）、ち（らす）、ち（らかす）、ち（らかる）
+4年生残のこ（る）、のこ（す）
+4年生氏うじ
+4年生司シ-
+4年生試こころ（みる）、ため（ス）
+4年生児ジ-
+4年生治おさ（める）、おさ（まる）、なお（る）、なお（す）
+4年生滋ジ-
+4年生辞や（める）
+4年生鹿か、しか
+4年生失うしな（う）
+4年生借か（りる）
+4年生種たね
+4年生周まわり
+4年生祝いわ（う）
+4年生順ジュン-
+4年生初はじ（め）、はじ（めて）、はつ,うい
+4年生松まつ
+4年生笑わら（う）、え（む）
+4年生唱とな（える）
+4年生焼や（く）、や（ける）
+4年生照て（る）、て（らす）、て（れる）
+4年生城しろ
+4年生縄なわ
+4年生臣シン、ジン-
+4年生信シン-
+4年生井い
+4年生成な（る）、な（す）
+4年生省かえり（みる）、はぶ（く）
+4年生清きよ（い）、きよ（まる）、きよ（める）
+4年生静しず、しず（か）、しず（まる）、しず（める）
+4年生席セキ-
+4年生積つ（む）、つ（もる）
+4年生折お（る）、おり, o（れる）
+4年生節ふし
+4年生説と（く）
+4年生浅あさ（い）
+4年生戦いくさ,たたか（う）
+4年生選えら（ぶ）
+4年生然ゼン、ネン-
+4年生争あらそ（う）
+4年生倉くら
+4年生巣す
+4年生束たば
+4年生側かわ
+4年生続つづ（く）、つづ（ける）
+4年生卒ソツ-
+4年生孫まご
+4年生帯おび、おび（る）
+4年生隊タイ-
+4年生達タツ-
+4年生単タン-
+4年生置お（く）
+4年生仲なか
+4年生沖おき
+4年生兆きざ（す）、きざ（し）
+4年生低ひく（い）、ひく（める）、ひく（まる）
+4年生底そこ
+4年生的まと
+4年生典テン-
+4年生伝つた（わる）、つた（える）、つた（う）
+4年生徒ト-
+4年生努つと（める）
+4年生灯ひ
+4年生働はたら（く）
+4年生特トク-
+4年生徳トク-
+4年生栃とち
+4年生奈ナ-
+4年生梨なし
+4年生熱あつ（い）
+4年生念ネン-
+4年生敗やぶ（れる）
+4年生梅うめ
+4年生博ハク,バク-
+4年生阪ハン-
+4年生飯めし
+4年生飛と（ぶ）、と（ばす）
+4年生必かなら（ず）
+4年生票ヒョウ-
+4年生標ヒョウ-
+4年生不フ,ブ-
+4年生夫おっと
+4年生付つ（ける）、つ（く）
+4年生府フ-
+4年生阜フ-
+4年生富と（む）、とみ
+4年生副フク-
+4年生兵ヘイ,ヒョウ-
+4年生別わか（れ、）
+4年生辺あた（り）、べ
+4年生変か（わる）、か（える）
+4年生便たよ（り）
+4年生包つつ（む）
+4年生法ホウ、ハッ、ホッ-
+4年生望のぞ（む）
+4年生牧まき
+4年生末すえ
+4年生満み（ちる）、み（たす）
+4年生未ミ-
+4年生民たみ
+4年生無な（い）
+4年生約ヤク-
+4年生勇いさ（む）
+4年生要かなめ、い（る）
+4年生養やしな（う）
+4年生浴あ（びる）、あ（びせる）
+4年生利き（く）
+4年生陸リク-
+4年生良よ（い）
+4年生料リョウ-
+4年生量はか（る）
+4年生輪わ
+4年生類ルイ-
+4年生令レイ-
+4年生冷つめ（たい）、ひ（える）、ひ（や）、ひ（やす）、ひ（やかす）、さ（める）、さ（ます）
+4年生例たと（える）
+4年生連つら（なる）、つら（ねる）、つ（れる）
+4年生老お（いる）
+4年生労ロウ-
+4年生録ロク-
+4年生(追加)生ショウ-
+4年生(追加)女ニョ-
+4年生(追加)画カ-
+4年生(追加)作サ-
+4年生(追加)食ジキ-
+4年生(追加)通とお（す）
+4年生(追加)化ケ-
+4年生(追加)去コ-
+4年生(追加)相ショウ-
+4年生(追加)物モツ-
+4年生(追加)役エキ-
+5年生圧アツ-
+5年生囲かこ（む）、かこ（う）
+5年生移うつ（る）、うつ（す）
+5年生因よ（る）
+5年生永なが（い）
+5年生営いとな（む）
+5年生衛エイ-
+5年生易やさ（しい）
+5年生益エキ、ヤク-
+5年生液エキ-
+5年生演エン-
+5年生応こた（える）
+5年生往オウ-
+5年生桜さくら
+5年生可カ-
+5年生仮かり
+5年生価あたい
+5年生河かわ
+5年生過す（ぎる）、す（ごす）、あやま（つ）
+5年生快こころよ（い）
+5年生解と（く）、と（ける）
+5年生格カク、コウ-
+5年生確たし（か）
+5年生額ひたい
+5年生刊カン-
+5年生幹みき
+5年生慣な（れる）、な（らす）
+5年生眼まなこ
+5年生紀キ-
+5年生基もと、もとい
+5年生寄よ（る）、よ（せる）
+5年生規キ-
+5年生喜よろこ（ぶ）
+5年生技わざ
+5年生義ギ-
+5年生逆さか、さか（らう）
+5年生久ひさ（しい）
+5年生旧キュウ-
+5年生救すく（う）
+5年生居い（る）
+5年生許ゆる（す）
+5年生境さかい
+5年生均キン-
+5年生禁キン-
+5年生句ク-
+5年生型かた
+5年生経へ（る）
+5年生潔いさぎよ（い）
+5年生件ケン-
+5年生険けわ（しい）
+5年生検ケン-
+5年生限かぎ（る）
+5年生現あらわ（れる）、あらわ（す）
+5年生減へ（る）、へ（らす）
+5年生故ゆえ
+5年生個コ-
+5年生護ゴ-
+5年生効き（く）
+5年生厚あつ（い）
+5年生耕たがや（す）
+5年生航コウ-
+5年生鉱コウ-
+5年生構かま（える）、かま（う）
+5年生興お（こる）
+5年生講コウ-
+5年生告つ（げる）
+5年生混ま（じる）、ま（ざる）
+5年生査サ-
+5年生再ふたた（び）
+5年生災わざわ（い）
+5年生妻つま
+5年生採と（る）
+5年生際きわ
+5年生在あ（る）
+5年生財ザイ、サイ-
+5年生罪つみ
+5年生殺ころ（ス）
+5年生雑ザツ、ゾウ-
+5年生酸サン-
+5年生賛サン-
+5年生士シ-
+5年生支ささ（える）
+5年生史シ-
+5年生志こころざ（す）
+5年生枝えだ
+5年生師シ-
+5年生資シ-
+5年生飼か（う）
+5年生示しめ（す）
+5年生似に（る）
+5年生識シキ-
+5年生質シツ、シチ、チ-
+5年生舎シャ-
+5年生謝あやま（る）
+5年生授さず（ける）
+5年生修おさ（める）
+5年生述の（べる）
+5年生術ジュツ-
+5年生準ジュン-
+5年生序ジョ-
+5年生招まね（く）
+5年生証ショウ-
+5年生象ショウ、ゾウ-
+5年生賞ショウ-
+5年生条ジョウ-
+5年生状ジョウ-
+5年生常つね
+5年生情なさ（け）
+5年生織お（る）
+5年生職ショク-
+5年生制セイ-
+5年生性セイ、ショウ-
+5年生政まつりごと
+5年生勢いきおい
+5年生精セイ、ショウ-
+5年生製セイ-
+5年生税ゼイ-
+5年生責せ（める）
+5年生績セキ-
+5年生接つ（ぐ）
+5年生設もう（ける）
+5年生絶た（える）、た（やす）、た（つ）
+5年生祖ソ-
+5年生素ソ,ス-
+5年生総ソウ-
+5年生造つく（る）
+5年生像ゾウ-
+5年生増ま（す）、ふ（える）
+5年生則ソク-
+5年生測はか（る）
+5年生属ゾク-
+5年生率ひき（いる）
+5年生損そこ（なう）
+5年生貸か（ス）
+5年生態タイ-
+5年生団ダン、トン-
+5年生断た（つ）、ことわ（る）
+5年生築きず（く）
+5年生貯チョ-
+5年生張は（る）
+5年生停テイ-
+5年生提テイ-
+5年生程ほど
+5年生適テキ-
+5年生統す（べる）
+5年生堂ドウ-
+5年生銅ドウ-
+5年生導みちび（く）
+5年生得え（る）
+5年生毒ドク-
+5年生独ひとり
+5年生任まか（せる）
+5年生燃も（える）
+5年生能ノウ-
+5年生破やぶ（る）、やぶ（れる）
+5年生犯o（かす）
+5年生判ハン、バン-
+5年生版ハン-
+5年生比くら（べる）
+5年生肥こ（える）、こ（やす）
+5年生非ヒ-
+5年生費つい（やす）
+5年生備そな（える）
+5年生評ヒョウ-
+5年生貧まず（しい）
+5年生布ぬの
+5年生婦フ-
+5年生武ブ、ム-
+5年生復フク-
+5年生複フク-
+5年生仏ほとけ
+5年生粉こな、こ
+5年生編あ（む）
+5年生弁ベン-
+5年生保持たも（つ）
+5年生墓はか
+5年生報むく（いる）
+5年生豊ゆた（か）
+5年生防ふせ（ぐ）
+5年生貿ボウ-
+5年生暴あば（れる）
+5年生脈ミャク-
+5年生務つと（める）、つと（まる）
+5年生夢ゆめ
+5年生迷まよ（う）
+5年生綿わた
+5年生輸ユ-
+5年生余あま（る）、あま（す）
+5年生容ヨウ-
+5年生略リャク-
+5年生留と（める）、と（まる）
+5年生領リョウ-
+5年生歴レキ-
+5年生(追加)絵カイ-
+5年生(追加)客カク-
+5年生(追加)礼ライ-
+5年生(追加)期ゴ-
+5年生(追加)治チ-
+5年生(追加)色シキ-
+5年生(追加)省セイ-
+5年生(追加)競ケイ-
+5年生(追加)説ゼイ-
+5年生(追加)夫フウ-
+5年生(追加)便ビン-
+6年生胃イ-
+6年生異こと（なる）
+6年生遺イ、ユイ-
+6年生域イキ-
+6年生宇ウ-
+6年生映うつ（る）、は（える）
+6年生延の（びる）、の（べる）
+6年生沿そ（う）
+6年生恩オン-
+6年生我われ
+6年生灰はい
+6年生拡カク-
+6年生革かわ
+6年生閣カク-
+6年生割わ（る）
+6年生株かぶ
+6年生干ほ（す）、ひ（る）
+6年生巻ま（く）、まき
+6年生看カン-
+6年生開カン-
+6年生危あぶ（ない）、あや（うい）
+6年生机つくえ
+6年生揮キ-
+6年生貴たっと（い）、とうと（い）
+6年生疑うたが（う）
+6年生吸す（う）
+6年生供そな（える）、とも
+6年生胸むね
+6年生郷キョウ、ゴウ-
+6年生勤つと（める）
+6年生筋すじ
+6年生系ケイ-
+6年生敬うやま（う）
+6年生警ケイ-
+6年生劇ゲキ-
+6年生激はげ（しい）
+6年生穴あな
+6年生券ケン-
+6年生絹きぬ
+6年生権ケン、ゴン-
+6年生憲ケン-
+6年生源みなもと
+6年生厳おごそ（か）、きび（しい）
+6年生己おのれ
+6年生呼よ（ぶ）
+6年生誤あやま（る）
+6年生后コウ-
+6年生孝コウ-
+6年生皇コウ、オウ-
+6年生紅べに、くれない
+6年生降o（りる）、ふ（る）
+6年生鋼はがね
+6年生刻きざ（む）
+6年生穀コク-
+6年生骨ほね
+6年生困こま（る）
+6年生砂すな
+6年生座すわ（る）
+6年生済す（む）、す（ます）
+6年生裁た（つ）、さば（く）
+6年生策サク-
+6年生冊サツ、サク-
+6年生蚕かいこ
+6年生至いた（る）
+6年生私わたくし、わたし
+6年生姿すがた
+6年生視シ-
+6年生詞シ-
+6年生誌シ-
+6年生磁ジ-
+6年生射い（る）
+6年生捨す（てる）
+6年生尺シャク-
+6年生若わか（い）、も（しくは）
+6年生樹ジュ-
+6年生収おさ（める）
+6年生宗シュウ、ソウ-
+6年生就つ（く）、つ（ける）
+6年生衆シュウ、シュ-
+6年生従したが（う）
+6年生縦たて
+6年生縮ちぢ（む）、ちぢ（まる）
+6年生熟う（れる）
+6年生純ジュン-
+6年生処ショ-
+6年生署ショ-
+6年生諸ショ-
+6年生除のぞ（く）
+6年生承うけたまわ（る）
+6年生将ショウ-
+6年生傷きず、いた（む）
+6年生障さわ（る）
+6年生蒸む（す）、む（れる）
+6年生針はり
+6年生仁ジン、ニ-
+6年生垂た（れる）、た（らす）
+6年生推o（す）
+6年生寸スン-
+6年生盛も（る）、さか（ん）
+6年生聖セイ-
+6年生誠まこと
+6年生舌した
+6年生宣セン-
+6年生専もっぱ（ら）
+6年生泉いずみ
+6年生洗あら（う）
+6年生染そ（める）、し（みる）
+6年生銭ぜに
+6年生善よ（い）
+6年生奏かな（でる）
+6年生窓まど
+6年生創つく（る）
+6年生装よそお（う）
+6年生層ソウ-
+6年生操みさお、あやつ（る）
+6年生蔵くら
+6年生臓ゾウ-
+6年生存ソン、ゾン-
+6年生尊たっと（い）、とうと（い）
+6年生退しりぞ（く）
+6年生宅タク-
+6年生担にな（う）
+6年生探さが（す）、さぐ（る）
+6年生誕タン-
+6年生段ダン-
+6年生暖あたた（か）、あたた（かい）
+6年生値ね、あたい
+6年生宙チュウ-
+6年生忠チュウ-
+6年生著あらわ（す）、いちじる（しい）
+6年生庁チュウ-
+6年生頂いただき
+6年生腸わた
+6年生潮しお
+6年生賃チン-
+6年生痛いた（い）、いた（む）
+6年生敵かたき
+6年生展テン-
+6年生討う（つ）
+6年生党トウ-
+6年生糖トウ-
+6年生届とど（ける）
+6年生難かた（い）、むずか（しい）
+6年生乳ちち
+6年生認みと（める）
+6年生納o（さめる）
+6年生脳ノウ-
+6年生派ハ-
+6年生拝o（がむ）
+6年生背せ、せい、そむ（く）
+6年生肺ハイ-
+6年生俳ハイ-
+6年生班ハン-
+6年生晩晩-
+6年生否いな
+6年生批ヒ-
+6年生秘ひそ（か）
+6年生俵たわら
+6年生腹はら
+6年生奮ふる（う）
+6年生並なみ、なら（べる）、なら（ぶ）
+6年生陛ヘイ-
+6年生閉と（じる）、た（てる）
+6年生片かた
+6年生補o（ぎなう）
+6年生暮く（れる）、く（らす）
+6年生宝たから
+6年生訪o（とずれる）、たず（ねる）
+6年生亡な（い）
+6年生忘わす（れる）
+6年生棒ボウ-
+6年生枚マイ-
+6年生幕マク、バク-
+6年生密ひそ（か）
+6年生盟メイ-
+6年生模モ、ボ-
+6年生訳わけ
+6年生郵ユウ-
+6年生優やさ（しい）、すぐ（れる）
+6年生預あず（ける）
+6年生幼おさな（い）
+6年生欲ほっ（する）
+6年生翌ヨク-
+6年生乱みだ（れる）
+6年生卵たまご
+6年生覧ラン-
+6年生裏うら
+6年生律リツ、イチ-
+6年生臨のぞ（む）
+6年生朗ほが（らか）
+6年生論ロン-
+6年生(追加)後おく（れる）
+6年生(追加)図ト-
+6年生(追加)家ケ-
+6年生(追加)黄オウ-
+6年生(追加)重チョウ-
+6年生(追加)相ショウ-
+6年生(追加)表あらわ（す）、あらわ（れる）
+6年生(追加)期ゴ-
+6年生(追加)無ブ-
+6年生(追加)治チ-
+6年生(追加)易イ-
+6年生(追加)興キョウ-
+6年生(追加)率ソツ-
+`.trim();
+
+    let kanjiList = [];
+    let kanjiStore = {}; 
+    let appState = { 
+      currentKanji: null, 
+      mastered: [], 
+      currentStroke: 0, 
+      isPracticing: false, 
+      animeIsRunning: false, 
+      selectedGrade: 1,
+      hasMistaken: false,
+      reviewQueue: []
+    };
+    const kanjiPathsCache = {};
+    let writeCanvas, inkCanvas, guideCanvas, ctxW, ctxInk, ctxGuide, audioCtx;
+
+    let prefetchQueue = [];
+    let isPrefetching = false;
+
+    async function startPrefetching() {
+      if (isPrefetching) return;
+      isPrefetching = true;
+      while (prefetchQueue.length > 0) {
+        const char = prefetchQueue.shift();
+        if (!kanjiPathsCache[char]) {
+          await fetchKanjiVG(char);
+          await new Promise(r => setTimeout(r, 20)); 
+        }
+      }
+      isPrefetching = false;
+    }
+
+    function queuePrefetch(grade) {
+      prefetchQueue = [];
+      appState.reviewQueue.forEach(q => { if (!kanjiPathsCache[q.char]) prefetchQueue.push(q.char); });
+      let pool = kanjiList.filter(k => k.baseGrade === grade && !appState.mastered.includes(k.char));
+      pool.sort(() => Math.random() - 0.5);
+      pool.forEach(k => { if (!kanjiPathsCache[k.char] && !prefetchQueue.includes(k.char)) { prefetchQueue.push(k.char); } });
+      startPrefetching();
+    }
+
+    function el(id) { return document.getElementById(id); }
+    function setStyle(id, prop, val) { const element = el(id); if (element) element.style[prop] = val; }
+    function setDisplay(id, val) { setStyle(id, 'display', val); }
+
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    function playTone(freq, type, duration, vol = 0.1) {
+      if(!audioCtx) return;
+      try {
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(vol, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+    function playPingPong() { initAudio(); playTone(659.25, 'sine', 0.15, 0.1); setTimeout(() => playTone(880.00, 'sine', 0.3, 0.1), 100); }
+    function playBuzzer() { initAudio(); playTone(150, 'square', 0.2, 0.05); }
+    function playFanfare() { initAudio(); [0, 150, 300, 500].forEach((t, i) => { const f = [523.25, 659.25, 783.99, 1046.50][i]; setTimeout(() => playTone(f, 'sine', 0.4, 0.15), t); }); }
+
+    function burstConfetti() {
+      const canvas = el('confettiCanvas'); if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      const particles = Array.from({length: 60}, () => ({
+        x: canvas.width / 2, y: canvas.height / 2, r: Math.random() * 8 + 4, dx: Math.random() * 10 - 5, dy: Math.random() * -10 - 5,
+        color: ['#fce7f3', '#fef08a', '#bae6fd', '#a7f3d0', '#c7d2fe'][Math.floor(Math.random() * 5)],
+        tiltAngleIncrement: (Math.random() * 0.07) + 0.05, tiltAngle: 0
+      }));
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); let active = 0;
+        particles.forEach(p => {
+          p.tiltAngle += p.tiltAngleIncrement; p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2; p.x += Math.sin(p.tiltAngle) * 2 + p.dx;
+          p.dy += 0.1; p.y += p.dy; if (p.y <= canvas.height) active++;
+          ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.r, p.y); ctx.lineTo(p.x, p.y + p.r); ctx.stroke();
+        });
+        if (active > 0) requestAnimationFrame(render);
+      }
+      render();
+    }
+
+    function getCircleNum(num) {
+      if (num >= 7 && num < 99) return "㊥";
+      const circles = ["", "①", "②", "③", "④", "⑤", "⑥"];
+      return circles[num] || "";
+    }
+
+    function parseKanjiData() {
+      kanjiStore = {}; 
+      const lines = KANJI_DATA_RAW.split('\n');
+      lines.forEach(line => {
+        line = line.trim(); if(!line) return;
+        const match = line.match(/^(\d)年生(?:\(追加\))?\s*(\S)(.*)$/); 
+        if(!match) return;
+        const grade = parseInt(match[1], 10); 
+        const char = match[2]; 
+        const readings = match[3];
+
+        if (!kanjiStore[char]) { kanjiStore[char] = { baseGrade: grade, on: [], kun: [] }; }
+
+        const onMatch = readings.match(/^[ア-ンヴー、,]+/);
+        let onPart = onMatch ? onMatch[0] : "";
+        let kunPart = readings.substring(onPart.length);
+
+        const splitReadings = (str) => str.replace(/^[ー\-\s,、]+/, "").split(/[、,]/).filter(s => s.trim() !== "");
+
+        // 後の学年で追加される読みを優先しマーカーを保持するロジック
+        splitReadings(onPart).forEach(v => {
+          const existing = kanjiStore[char].on.find(o => o.v === v);
+          if (existing) {
+            if (grade > existing.g) existing.g = grade;
+          } else {
+            kanjiStore[char].on.push({ v, g: grade });
+          }
+        });
+        splitReadings(kunPart).forEach(v => {
+          const existing = kanjiStore[char].kun.find(o => o.v === v);
+          if (existing) {
+            if (grade > existing.g) existing.g = grade;
+          } else {
+            kanjiStore[char].kun.push({ v, g: grade });
+          }
+        });
+      });
+      kanjiList = Object.entries(kanjiStore).map(([char, data]) => ({ char, ...data }));
+    }
+
+    async function fetchKanjiVG(char) {
+      if (kanjiPathsCache[char]) return kanjiPathsCache[char];
+      const hex = char.charCodeAt(0).toString(16).padStart(5, '0');
+      // URLを正しい形式に修正
+      const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg@master/kanji/${hex}.svg`;
+      try {
+        const res = await fetch(url); if (!res.ok) throw new Error('Network error');
+        const text = await res.text(); const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+        const paths = Array.from(doc.querySelectorAll('path')).map(p => p.getAttribute('d')).filter(Boolean);
+        kanjiPathsCache[char] = paths; return paths;
+      } catch (e) { return null; }
+    }
+
+    function init() {
+      writeCanvas = el('writeCanvas'); inkCanvas = el('inkCanvas'); guideCanvas = el('guideCanvas');
+      if (!writeCanvas) return;
+      ctxW = writeCanvas.getContext('2d'); ctxInk = inkCanvas.getContext('2d'); ctxGuide = guideCanvas.getContext('2d');
+      if (kanjiList.length === 0) parseKanjiData();
+      const saved = localStorage.getItem('kanji_app_mastered_list'); if (saved) { try { appState.mastered = JSON.parse(saved); } catch(e){} }
+      const savedGrade = localStorage.getItem('kanji_app_grade'); if (savedGrade) { appState.selectedGrade = parseInt(savedGrade, 10); }
+      setupEvents(); selectRandomKanji(); window.addEventListener('resize', resizeCanvas);
+      updateSliderBg(); queuePrefetch(appState.selectedGrade);
+    }
+
+    function updateSliderBg() {
+      const slider = el('speedSlider'); if (!slider) return;
+      const val = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+      slider.style.background = `linear-gradient(to right, #38bdf8 0%, #38bdf8 ${val}%, #e2e8f0 ${val}%, #e2e8f0 100%)`;
+    }
+
+    async function selectSpecificKanji(char) {
+      if (!char) return;
+      let selected = kanjiList.find(k => k.char === char);
+      if (!selected) {
+        selected = { char: char, baseGrade: 99, on: [], kun: [{ v: "？？", g: 99 }] };
+        if(!kanjiStore[char]) kanjiStore[char] = selected;
+      }
+      appState.selectedGrade = selected.baseGrade;
+      localStorage.setItem('kanji_app_grade', appState.selectedGrade);
+      appState.currentKanji = selected; appState.currentStroke = 0; appState.hasMistaken = false;
+      if (ctxW) ctxW.clearRect(0, 0, writeCanvas.width, writeCanvas.height);
+      if (ctxInk) ctxInk.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+      stopPractice(); closeAnime(); updateGradeButtons();
+      const statusEl = el('testStatus'); if (statusEl) statusEl.innerText = "よみこみ中...";
+      const paths = await fetchKanjiVG(char);
+      if (!paths || paths.length === 0) { if(statusEl) statusEl.innerText = "データが ありません"; return; }
+      appState.currentKanji.paths = paths;
+      setTimeout(() => { resizeCanvas(); updateUI(); }, 50);
+    }
+
+    async function selectRandomKanji() {
+      appState.reviewQueue.forEach(q => q.wait--);
+      let targetChar = null;
+      const reviewTarget = appState.reviewQueue.find(q => q.wait <= 0 && !appState.mastered.includes(q.char));
+      if (reviewTarget) { targetChar = reviewTarget.char; appState.reviewQueue = appState.reviewQueue.filter(q => q.char !== targetChar); }
+      let selected;
+      if (targetChar) { selected = kanjiList.find(k => k.char === targetChar); }
+      if (!selected) {
+        let pool = kanjiList.filter(k => k.baseGrade === appState.selectedGrade && !appState.mastered.includes(k.char));
+        if (appState.currentKanji) pool = pool.filter(k => k.char !== appState.currentKanji.char);
+        if (pool.length === 0) pool = kanjiList.filter(k => k.baseGrade === appState.selectedGrade);
+        if (pool.length === 0) { if (appState.selectedGrade !== 1) { changeGrade(1); } return; }
+        selected = pool[Math.floor(Math.random() * pool.length)];
+      }
+      selectSpecificKanji(selected.char);
+    }
+
+    function changeGrade(g) { appState.selectedGrade = g; localStorage.setItem('kanji_app_grade', g); selectRandomKanji(); queuePrefetch(g); }
+    
+    function updateGradeButtons() {
+      for(let i=1; i<=6; i++) {
+        const btn = el('gb' + i); if (!btn) continue;
+        if (i === appState.selectedGrade) btn.classList.add('active'); else btn.classList.remove('active');
+      }
+    }
+    
+    function resizeCanvas() {
+      const grid = el('writeGrid'); if (!grid || !writeCanvas) return;
+      const size = grid.clientHeight; if (size === 0) return;
+      [writeCanvas, inkCanvas, guideCanvas].forEach(c => { c.width = size; c.height = size; });
+      redrawGuide(); redrawInk();
+    }
+    
+    function redrawGuide() {
+      if (!appState.currentKanji || !guideCanvas || !appState.currentKanji.paths) return;
+      const size = guideCanvas.width; ctxGuide.clearRect(0, 0, size, size);
+      ctxGuide.save(); ctxGuide.scale(size/109, size/109); ctxGuide.strokeStyle = "#e2e8f0"; ctxGuide.lineWidth = 6; ctxGuide.lineCap = 'round'; ctxGuide.lineJoin = 'round';
+      appState.currentKanji.paths.forEach(p => { ctxGuide.stroke(new Path2D(p)); });
+      ctxGuide.restore();
+    }
+    
+    function renderReadings(containerId, list, baseGrade) {
+      const container = el(containerId); if (!container) return;
+      container.innerHTML = '';
+      if(list.length === 0) { container.innerHTML = '<div class="vertical-text opacity-30">-</div>'; return; }
+      list.slice(0, 3).forEach(item => {
+        const div = document.createElement('div'); div.className = 'vertical-text';
+        // ご要望の修正: マーカーがない読みの頭を全角スペースで揃える
+        const marker = (item.g > baseGrade) ? getCircleNum(item.g) : "　";
+        div.innerText = marker + item.v; container.appendChild(div);
+      });
+    }
+
+    function getPathStartPoint(pathStr) {
+      const svg = el('animeSvg'); const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathStr); svg.appendChild(path); const start = path.getPointAtLength(0); svg.removeChild(path);
+      return { x: start.x, y: start.y };
+    }
+
+    function updateUI() {
+      const k = appState.currentKanji; if (!k || !k.paths) return;
+      const infoSvg = el('infoKanjiSvg');
+      if (infoSvg) {
+        infoSvg.innerHTML = '';
+        k.paths.forEach(p => {
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("d", p); path.setAttribute("class", "info-stroke-path"); infoSvg.appendChild(path);
+        });
+      }
+      const gradeLabel = el('currentGradeLabel');
+      if (gradeLabel) {
+        if (k.baseGrade <= 6) gradeLabel.innerText = k.baseGrade + "ねんせいでならうかん字";
+        else gradeLabel.innerText = "とくべつな かん字";
+      }
+      redrawGuide();
+      const stText = el('strokeCountText'); if (stText) stText.textContent = k.paths.length;
+      renderReadings('kunReadings', k.kun, k.baseGrade); renderReadings('onReadings', k.on, k.baseGrade);
+      renderMasteredList();
+      
+      const animeBgGroup = el('animeBgGroup'); const strkGrp = el('strokeGroup'); const numGrp = el('numberGroup'); 
+      if (!animeBgGroup || !strkGrp || !numGrp) return;
+      animeBgGroup.innerHTML = ''; strkGrp.innerHTML = ''; numGrp.innerHTML = ''; 
+      const placedPositions = [];
+      k.paths.forEach((p, i) => {
+        const bgPath = document.createElementNS("http://www.w3.org/2000/svg", "path"); bgPath.setAttribute("d", p); bgPath.setAttribute("class", "bg-stroke-path"); animeBgGroup.appendChild(bgPath);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path"); path.setAttribute("d", p); path.setAttribute("class", "stroke-path"); path.id = `anime-s-${i}`; path.style.strokeDasharray = "1000"; path.style.strokeDashoffset = "1000"; strkGrp.appendChild(path);
+        const startPt = getPathStartPoint(p);
+        let baseX = Math.max(8, Math.min(101, startPt.x - 12));
+        let baseY = Math.max(8, Math.min(101, startPt.y - 12));
+        let cx = baseX, cy = baseY;
+        const minDistance = 13;
+        let collision = true, angle = 0, radius = 0, step = 0;
+        while (collision && step < 50) {
+          collision = false;
+          if (cx < 8 || cx > 101 || cy < 8 || cy > 101) collision = true;
+          if (!collision) { for (let j = 0; j < placedPositions.length; j++) { if (Math.hypot(cx - placedPositions[j].x, cy - placedPositions[j].y) < minDistance) { collision = true; break; } } }
+          if (collision) { step++; angle += Math.PI / 3; if (step % 6 === 0) radius += 6; cx = baseX + Math.cos(angle) * (6 + radius); cy = baseY + Math.sin(angle) * (6 + radius); }
+        }
+        cx = Math.max(8, Math.min(101, cx)); cy = Math.max(8, Math.min(101, cy));
+        placedPositions.push({x: cx, y: cy});
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.id = `anime-num-${i}`; g.style.opacity = "0"; g.style.transition = "opacity 0.2s ease-in";
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", "5.5"); circle.setAttribute("fill", "#ffffff"); circle.setAttribute("stroke", "#f97316"); circle.setAttribute("stroke-width", "1.2");
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text"); text.setAttribute("x", cx); text.setAttribute("y", cy + 0.5); text.setAttribute("dominant-baseline", "central"); text.setAttribute("text-anchor", "middle"); text.setAttribute("font-size", "6"); text.setAttribute("font-weight", "900"); text.setAttribute("fill", "#f97316"); text.style.fontFamily = "sans-serif"; text.textContent = (i + 1).toString();
+        g.appendChild(circle); g.appendChild(text); numGrp.appendChild(g);
+      });
+    }
+
+    function startPractice() {
+      initAudio(); appState.isPracticing = true; appState.currentStroke = 0;
+      ['kunCard', 'onCard', 'currentGradeLabelContainer', 'practiceControls'].forEach(id => setDisplay(id, 'none'));
+      const spBtn = el('startPracticeBtn'); if (spBtn) spBtn.classList.add('hidden');
+      const infoLabel = el('infoLabel'); if (infoLabel) infoLabel.style.visibility = 'hidden';
+      ctxInk.clearRect(0,0,inkCanvas.width, inkCanvas.height); ctxW.clearRect(0,0,writeCanvas.width, writeCanvas.height);
+      const wa = el('writeArea'); if (wa) wa.classList.remove('locked');
+      const cb = el('clearBtn'); if (cb) cb.classList.remove('locked');
+      const statusEl = el('testStatus'); if (statusEl) { statusEl.innerText = "１かくめ をかこう！"; statusEl.className = "text-sm font-black text-white bg-orange-400 px-4 py-1.5 rounded-full shadow-md"; }
+      playTone(440, 'sine', 0.1);
+    }
+
+    function restartPractice() { if (appState.isPracticing) { appState.hasMistaken = true; startPractice(); } }
+    function stopPractice() {
+      appState.isPracticing = false; 
+      const wa = el('writeArea'); if (wa) wa.classList.add('locked');
+      const cb = el('clearBtn'); if (cb) cb.classList.add('locked');
+      ['kunCard', 'onCard', 'practiceControls'].forEach(id => setDisplay(id, 'flex'));
+      setDisplay('currentGradeLabelContainer', 'block');
+      const infoLabel = el('infoLabel'); if (infoLabel) infoLabel.style.visibility = 'visible';
+      const statusEl = el('testStatus'); if (statusEl) { statusEl.innerText = "ロック中 🔒"; statusEl.className = "text-sm font-black text-slate-400 bg-slate-100 px-4 py-1.5 rounded-full shadow-inner"; }
+      const spBtn = el('startPracticeBtn'); if (spBtn) spBtn.classList.remove('hidden');
+      const saBtn = el('showAnimeBtn'); if (saBtn) saBtn.classList.add('hidden');
+      const sbBtn = el('submitBtn'); if (sbBtn) sbBtn.classList.remove('hidden');
+    }
+
+    function handleMistake(msg) {
+      appState.hasMistaken = true; const statusEl = el('testStatus'); if (!statusEl) return;
+      statusEl.innerText = msg; statusEl.className = "text-sm font-black text-white bg-rose-400 px-4 py-1.5 rounded-full shadow-md";
+      playBuzzer(); setDisplay('practiceControls', 'flex');
+      const sbBtn = el('submitBtn'); if (sbBtn) sbBtn.classList.add('hidden');
+      const saBtn = el('showAnimeBtn'); if (saBtn) saBtn.classList.remove('hidden');
+    }
+
+    async function playAnime() {
+      if (appState.animeIsRunning) return;
+      initAudio(); appState.animeIsRunning = true; const paths = appState.currentKanji.paths;
+      const speed = el('speedSlider').value; const durationMs = (11 - speed) * 150; 
+      paths.forEach((_, i) => { const pEl = el(`anime-s-${i}`); if(pEl) { pEl.style.transition = 'none'; pEl.style.strokeDashoffset = "1000"; } const nEl = el(`anime-num-${i}`); if(nEl) { nEl.style.opacity = "0"; } });
+      for(let i=0; i<paths.length; i++) {
+        const pEl = el(`anime-s-${i}`); if (!pEl) continue;
+        const nEl = el(`anime-num-${i}`); if (nEl) nEl.style.opacity = "1";
+        await new Promise(r => setTimeout(r, 100));
+        pEl.style.transition = `stroke-dashoffset ${durationMs}ms ease-in-out`; pEl.getBoundingClientRect(); pEl.style.strokeDashoffset = "0";
+        playTone(500 + (i*50), 'triangle', durationMs/1000, 0.05); await new Promise(r => setTimeout(r, durationMs + 200));
+      }
+      appState.animeIsRunning = false;
+    }
+
+    function getStartEndPoints(pathStr) {
+      const svg = el('animeSvg'); const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathStr); svg.appendChild(path); const len = path.getTotalLength(); const start = path.getPointAtLength(0); const end = path.getPointAtLength(len);
+      svg.removeChild(path); return { s: { x: start.x / 109, y: start.y / 109 }, e: { x: end.x / 109, y: end.y / 109 } };
+    }
+
+    let drawing = false; let lastX, lastY; const TOLERANCE = 0.15; 
+    function startDraw(e) {
+      if (!appState.isPracticing) return;
+      const rect = writeCanvas.getBoundingClientRect(); const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left; const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      const strokes = appState.currentKanji.paths; if(appState.currentStroke >= strokes.length) return;
+      const target = getStartEndPoints(strokes[appState.currentStroke]).s;
+      const dist = Math.hypot(x / writeCanvas.width - target.x, y / writeCanvas.height - target.y);
+      if (dist > TOLERANCE) { handleMistake("かきはじめが ちがうよ💦"); return; }
+      drawing = true; lastX = x; lastY = y;
+      ctxW.lineCap = 'round'; ctxW.lineJoin = 'round'; ctxW.lineWidth = writeCanvas.width * 0.06; ctxW.strokeStyle = "rgba(14, 165, 233, 0.7)"; ctxW.beginPath(); ctxW.moveTo(x, y); ctxW.stroke();
+    }
+    
+    function draw(e) {
+      if (!drawing) return;
+      const rect = writeCanvas.getBoundingClientRect(); const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left; const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      ctxW.beginPath(); ctxW.moveTo(lastX, lastY); ctxW.lineTo(x, y); ctxW.stroke(); lastX = x; lastY = y;
+    }
+    
+    function endDraw() {
+      if (!drawing) return; drawing = false;
+      const strokes = appState.currentKanji.paths; const target = getStartEndPoints(strokes[appState.currentStroke]).e;
+      const dist = Math.hypot(lastX / writeCanvas.width - target.x, lastY / writeCanvas.height - target.y);
+      if (dist < TOLERANCE) {
+        appState.currentStroke++; redrawInk(); ctxW.clearRect(0,0,writeCanvas.width, writeCanvas.height);
+        if (appState.currentStroke >= strokes.length) {
+          setDisplay('practiceControls', 'flex'); const sbBtn = el('submitBtn'); if (sbBtn) sbBtn.classList.remove('hidden'); const saBtn = el('showAnimeBtn'); if (saBtn) saBtn.classList.add('hidden');
+          const statusEl = el('testStatus');
+          if (!appState.hasMistaken) {
+            if (statusEl) { statusEl.innerText = "💮 クリア！"; statusEl.className = "text-sm font-black text-white bg-emerald-500 px-4 py-1.5 rounded-full shadow-lg"; }
+            playFanfare(); burstConfetti(); showExcellentPopup();
+            if (!appState.mastered.includes(appState.currentKanji.char)) { 
+              appState.mastered.push(appState.currentKanji.char); localStorage.setItem('kanji_app_mastered_list', JSON.stringify(appState.mastered)); 
+              appState.reviewQueue = appState.reviewQueue.filter(q => q.char !== appState.currentKanji.char);
+              setTimeout(() => { hideExcellentPopup(); flyToCollection(appState.currentKanji.char); }, 1500);
+            } else { appState.reviewQueue = appState.reviewQueue.filter(q => q.char !== appState.currentKanji.char); setTimeout(() => { hideExcellentPopup(); renderMasteredList(); }, 1500); }
+          } else {
+            if (statusEl) { statusEl.innerText = "つぎは いっかいで かこう！"; statusEl.className = "text-sm font-black text-white bg-orange-500 px-4 py-1.5 rounded-full shadow-lg"; }
+            playPingPong(); const existing = appState.reviewQueue.find(q => q.char === appState.currentKanji.char);
+            if (existing) existing.wait = 3; else appState.reviewQueue.push({ char: appState.currentKanji.char, wait: 3 });
+          }
+        } else { const statusEl = el('testStatus'); if (statusEl) statusEl.innerText = (appState.currentStroke + 1) + "かくめ をかこう！"; playPingPong(); }
+      } else { ctxW.clearRect(0,0,writeCanvas.width, writeCanvas.height); handleMistake("さいごまで なぞってね💦"); }
+    }
+
+    function redrawInk() {
+      const size = inkCanvas.width; ctxInk.clearRect(0,0,size,size); if (appState.currentStroke === 0) return;
+      ctxInk.save(); ctxInk.scale(size/109, size/109); ctxInk.strokeStyle = "#000000"; ctxInk.lineWidth = 6; ctxInk.lineCap = 'round'; ctxInk.lineJoin = 'round';
+      const strokes = appState.currentKanji.paths; for(let i=0; i<appState.currentStroke; i++) ctxInk.stroke(new Path2D(strokes[i]));
+      ctxInk.restore();
+    }
+
+    function closeAnime() { const af = el('animeFrame'); if (af) af.classList.add('hidden'); setDisplay('infoFrame', 'flex'); if (appState.isPracticing) restartPractice(); }
+
+    function setupEvents() {
+      el('startPracticeBtn').onclick = startPractice; el('closeAnimeBtn').onclick = closeAnime; el('playBtn').onclick = playAnime; el('showAnimeBtn').onclick = () => { setDisplay('infoFrame', 'none'); el('animeFrame').classList.remove('hidden'); }; el('clearBtn').onclick = restartPractice; el('submitBtn').onclick = selectRandomKanji; el('skipToNextBtn').onclick = selectRandomKanji; el('resetAllBtn').onclick = () => { if(confirm("データを けしますか？")) { localStorage.clear(); location.reload(); } };
+      const triggerSearch = () => { const val = el('searchInput').value.trim(); if (val) selectSpecificKanji(val); el('searchInput').value = ""; };
+      el('searchBtn').onclick = triggerSearch; el('searchInput').onkeypress = (e) => { if (e.key === 'Enter') triggerSearch(); };
+      const slider = el('speedSlider'); if (slider) slider.addEventListener('input', updateSliderBg);
+      const preventDefault = (e) => { e.preventDefault(); };
+      writeCanvas.addEventListener('mousedown', startDraw); writeCanvas.addEventListener('mousemove', draw); writeCanvas.addEventListener('mouseup', endDraw); writeCanvas.addEventListener('mouseleave', endDraw);
+      writeCanvas.addEventListener('touchstart', (e) => { preventDefault(e); startDraw(e); }, {passive: false}); writeCanvas.addEventListener('touchmove', (e) => { preventDefault(e); draw(e); }, {passive: false}); writeCanvas.addEventListener('touchend', endDraw, {passive: false});
+    }
+
+    function renderMasteredList() {
+      const container = el('masteredList'); if (!container) return; container.innerHTML = '';
+      const gradeKanjiList = kanjiList.filter(k => k.baseGrade === appState.selectedGrade);
+      const totalInGrade = gradeKanjiList.length; const masteredInGradeCount = gradeKanjiList.filter(k => appState.mastered.includes(k.char)).length;
+      const progressEl = el('gradeProgress'); if (progressEl) { if (appState.selectedGrade <= 6) progressEl.innerText = `${masteredInGradeCount} ／ ${totalInGrade} 字`; else progressEl.innerText = "とくべつ"; }
+      const masteredToShow = appState.mastered.filter(char => { const kData = kanjiStore[char]; if (appState.selectedGrade <= 6) return kData && kData.baseGrade === appState.selectedGrade; return !kData || kData.baseGrade > 6; }).reverse();
+      masteredToShow.forEach(c => {
+        const d = document.createElement('div'); d.className = 'w-8 h-8 md:w-9 md:h-9 bg-white border-2 border-amber-300 rounded-full flex items-center justify-center kyokasho text-sm md:text-base font-black text-amber-700 shadow-sm shrink-0'; d.innerText = c; container.appendChild(d);
+      });
+      const countEl = el('masterTotalCount'); if (countEl) countEl.textContent = appState.mastered.length;
+    }
+
+    function showExcellentPopup() { const popup = el('excellentPopup'); if (!popup) return; popup.classList.remove('opacity-0', 'scale-50'); popup.classList.add('opacity-100', 'scale-100'); }
+    function hideExcellentPopup() { const popup = el('excellentPopup'); if (!popup) return; popup.classList.remove('opacity-100', 'scale-100'); popup.classList.add('opacity-0', 'scale-50'); }
+
+    function flyToCollection(char) {
+      const sourceGrid = document.querySelector('.kanji-grid'); if (!sourceGrid) { renderMasteredList(); return; }
+      const sourceRect = sourceGrid.getBoundingClientRect(); const targetList = el('masteredList'); if (!targetList) { renderMasteredList(); return; }
+      const targetRect = targetList.getBoundingClientRect(); const flier = document.createElement('div');
+      flier.className = 'fixed z-[150] kyokasho text-amber-500 bg-white border-4 border-amber-300 rounded-full flex items-center justify-center shadow-xl font-black';
+      flier.style.width = sourceRect.width + 'px'; flier.style.height = sourceRect.height + 'px';
+      flier.style.left = sourceRect.left + 'px'; flier.style.top = sourceRect.top + 'px';
+      flier.style.fontSize = (sourceRect.height * 0.7) + 'px'; flier.style.lineHeight = '1';
+      flier.innerText = char; document.body.appendChild(flier);
+      const targetCenterX = targetRect.left + 26; const targetCenterY = targetRect.top + 26;
+      const sourceCenterX = sourceRect.left + sourceRect.width / 2; const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+      const translateX = targetCenterX - sourceCenterX; const translateY = targetCenterY - sourceCenterY;
+      const targetScale = 36 / sourceRect.width;
+      const anim = flier.animate([ { transform: 'translate(0px, 0px) scale(1) rotate(0deg)', opacity: 1 }, { transform: `translate(${translateX}px, ${translateY}px) scale(${targetScale}) rotate(360deg)`, opacity: 0 } ], { duration: 1200, easing: 'ease-in', fill: 'forwards' });
+      anim.onfinish = () => { playTone(880, 'sine', 0.1); setTimeout(() => playTone(1108.73, 'sine', 0.15), 80); flier.remove(); renderMasteredList(); };
+    }
+
+    window.onload = () => { init(); setTimeout(() => { setStyle('appBody', 'opacity', '1'); }, 100); };
+  </script>
+</body>
+</html>
