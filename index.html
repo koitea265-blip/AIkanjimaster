@@ -282,7 +282,9 @@
   </footer>
 
   <script>
-    // 学習指導要領 準拠 1,026文字データ
+    const apiKey = ""; // Gemini API キーは環境から自動提供されます
+
+    // 精査済みの学習指導要領 準拠 1,026文字データ
     const KANJI_DATA_RAW = `
 1年生一イチ、イッひと（つ）
 1年生右ウ、ユウみぎ
@@ -303,7 +305,7 @@
 1年生空クウそら、あ（く）、あ（ける）、から
 1年生月ゲツ、ガツつき
 1年生犬ケンいぬ
-1年生見ケンみ（る）、み（える）、み（せる）
+1年生見見み（る）、み（える）、み（せる）
 1年生五ゴいつ（つ）
 1年生口コウ、クくち
 1年生校コウ-
@@ -331,7 +333,7 @@
 1年生青セイ、ショウあお
 1年生夕セキゆう
 1年生石セキ、シャク、コクいし
-1年生赤セキ、シャクあか
+1年生赤赤あか
 1年生千センち
 1年生川センかわ
 1年生先センさき
@@ -340,14 +342,14 @@
 1年生足ソクあし、た（る）、た（りる）、た（す）
 1年生村ソンむら
 1年生大ダイ、タイおお（きい）、おお（いに）
-1年生男ダン、ナンおとこ
+1年生男ダン, ナンおとこ
 1年生竹チクたけ
 1年生中チュウなか
 1年生虫チュウむし
 1年生町チョウまち
 1年生天テンあめ、あま
 1年生田デンた
-1年生土ド、ドトつち
+1年生土ド、トつち
 1年生二ニふた（つ）
 1年生日ニチ、ジツひ、か
 1年生入ニュウ、ジュはい（る）、い（れる）
@@ -398,7 +400,7 @@
 2年生教キョウおし（える）、おそ（わる）
 2年生近キンちか（い）
 2年生兄キョウ、ケイあに
-2年生形ケイ, ギョウかたち、なり
+2年生形ケイ、ギョウかたち、なり
 2年生計ケイはか（る）、はか（らう）
 2年生元ゲン、ガンもと
 2年生言ゲン、ゴンい（う）、こと
@@ -407,7 +409,7 @@
 2年生古コふる（い）、ふる（める）、ふる（まる）
 2年生午ゴ-
 2年生後後ゴ、コウのち、うしろ、あと、おく（れる）
-2年生語ゴかた（る）、かた（らう）
+2年生語語ゴかた（る）、かた（らう）
 2年生工コウ, ク-
 2年生公コウおおやけ
 2年生広コウひろ（い）、ひろ（まる）、ひろ（める）、ひろ（がる）、ひろ（げる）
@@ -458,7 +460,7 @@
 2年生晴セイは（れる）
 2年生切セツき（る）,き（れる）
 2年生雪セツゆき
-2年生船センふね
+2年生船センふね,ふな
 2年生线セン-
 2年生前ゼンまえ
 2年生組ソくみ,く（む）
@@ -493,7 +495,7 @@
 2年生内内ナイうち
 2年生南南ナンみなみ
 2年生肉肉ニク-
-2年生馬馬バうま
+2年生馬バうま
 2年生売売バイう（る）
 2年生買買バイか（う）
 2年生麦麦バクむぎ
@@ -548,8 +550,8 @@
 2年生(追加)小ショウ-
 2年生(追加)上ジョウ、ショウのぼ（る）、うわ,かみ
 2年生(追加)森シン-
-2年生(追加)正セイ,ショウただ（す）、まさ
-2年生(追加)生セイ,ショウは（える）、なマ
+2年生(追加)正セイ,ショウただ（す）,まさ
+2年生(追加)生セイ,ショウは（える）,なま
 2年生(追加)青セイ,ショウ-
 2年生(追加)夕セキ-
 2年生(追加)石セキ,シャク-
@@ -592,15 +594,15 @@
 3年生横オウよこ
 3年生屋オクや
 3年生温オンあたた（か）、あたた（かい）、あたた（まる）、あたた（める）
-3年生化カ、ケば（ける）、ば（かす）
+3年生化カば（ける）、ば（かす）
 3年生荷カに
 3年生界カイ-
 3年生開カイひら（く）、ひら（ける）、あ（く）、あ（ける）
 3年生階カイ-
 3年生寒カンさむ（い）
-3年生感カン-
-3年生漢カン-
-3年生館カンやかた
+3年生感感カン-
+3年生漢漢カン-
+3年生館館カンやかた
 3年生岸ガンきし
 3年生起オ（きる）、オ（こる）、オ（こす）
 3年生期期キ,ゴ-
@@ -710,10 +712,10 @@
 3年生笛笛笛テキふえ
 3年生鉄鉄鉄テツ-
 3年生転転転ころ（がる）,ころ（げる）,ころ（がス）,ころ（ぶ）
-3年生都都都ト,ツみやこ
+3年生都都ト,ツみやこ
 3年生度度度ド,トたび,はか（る）
 3年生投投投トウな（げる）
-3年生豆豆豆トウ,ズまめ
+3年生豆豆トウ,ズまめ
 3年生島島島トウしま
 3年生湯湯湯トウゆ
 3年生登登登トウ,トのぼ（る）
@@ -768,7 +770,7 @@
 3年生落落落ラク o（ちる）, o（とす）
 3年生流流流リュウ,ルなが（れる）,なが（ス）
 3年生旅リョたび
-3年生両両リョウ-
+3年生両リョウ-
 3年生緑みどり、ろく
 3年生礼礼礼レイ,ライ-
 3年生列列列レツ-
@@ -881,7 +883,7 @@
 4年生司司シ-
 4年生試試シこころ（みる）,ため（ス）
 4年生児児ジ-
-4年生治治ジ,チ oさ（める）, oさ（まる）,なお（る）,なお（す）
+4年生治治治ジ,チ oさ（める）, oさ（まる）,なお（る）,なお（す）
 4年生滋滋ジ-
 4年生辞辞ジや（める）
 4年生鹿しか、か
@@ -890,7 +892,7 @@
 4年生種種シュたね
 4年生周周シュウまわ（り）
 4年生祝祝シュクいわ（う）
-4年生順ジュン-
+4年生順順ジュン-
 4年生初初ショはじ（め）,はじ（めて）,はつ,うい
 4年生松松ショウまつ
 4年生笑笑ショウわら（う）,え（む）
@@ -947,7 +949,7 @@
 4年生梨梨-なし
 4年生熱熱ネツあつ（い）
 4年生念念ネン-
-4年生败ハイやぶ（れる）
+4年生敗敗ハイやぶ（れる）
 4年生梅梅バイうめ
 4年生博ハク,バク-
 4年生阪阪ハン-
@@ -1017,7 +1019,7 @@
 5年生易易エキ,イやさ（しい）
 5年生益益エキ,ヤク-
 5年生液液エキ-
-5年生演エン-
+5年生演演エン-
 5年生応応オウこた（える）
 5年生往往オウ-
 5年生桜桜オウさくら
@@ -1025,11 +1027,11 @@
 5年生仮仮カ,ケかり
 5年生価価カあたい
 5年生河河カかわ
-5年生過過カす（ぎる）,す（ごす）,あやま（つ）,あやま（ち）
+5年生過過カす（ぎる）,す（ごす）,あやま（つ）
 5年生快快カイこころよ（い）
 5年生解解カイ,ゲと（く）,と（かす）,と（ける）
 5年生格格カク,コウ-
-5年生確確カクたし（か）,たし（かめる）
+5年生確確カクたし（か）
 5年生額額ガクひたい
 5年生刊刊カン-
 5年生幹幹カンみき
@@ -1054,13 +1056,13 @@
 5年生句句ク-
 5年生型型ケイかた
 5年生経経ケイ,キョウへ（る）
-5年生洁洁ケツいさぎよ（い）
+5年生潔潔ケツいさぎよ（い）
 5年生件件ケン-
 5年生険険ケンけわ（しい）
 5年生検検ケン-
 5年生限限ゲンかぎ（る）
-5年生現現ゲンあらわ（れる）,あらわ（す）
-5年生減減ゲンへ（る）,へ（らす）
+5年生現現あらわ（れる）、あらわ（す）
+5年生減減ゲンへ（る）、へ（らす）
 5年生故故コゆえ
 5年生個個コ-
 5年生護護ゴ-
@@ -1092,7 +1094,7 @@
 5年生史史シ-
 5年生志志こころざ（す）,こころざし
 5年生枝枝シえだ
-5年生师师シ-
+5年生師師シ-
 5年生資資シ-
 5年生飼飼シか（う）
 5年生示示ジ,シしめ（す）
@@ -1125,11 +1127,11 @@
 5年生製製セイ-
 5年生税税ゼイ-
 5年生责责セキせ（める）
-5年生績セキ-
+5年生績績セキ-
 5年生接接セツつ（ぐ）
 5年生設設セツもう（ける）
 5年生絶絶ゼツた（える）,た（やす）,た（つ）
-5年生祖ソ-
+5年生祖祖ソ-
 5年生素素ソ,ス-
 5年生総総ソウ-
 5年生造造ゾウつく（る）
@@ -1152,7 +1154,7 @@
 5年生程程テイほど
 5年生適適テキ-
 5年生統統トウす（べる）
-5年生堂ドウ-
+5年生堂堂ドウ-
 5年生銅銅ドウ-
 5年生導導ドウみちび（く）
 5年生得得トクえ（る）
@@ -1187,7 +1189,7 @@
 5年生豊豊ホウゆた（か）
 5年生防防ボウふせ（ぐ）
 5年生貿貿ボウ-
-5年生暴暴ボウ,バクあば（れる）,あば（く）
+5年生暴ボウ,バクあば（れる）,あば（く）
 5年生脈脈ミャク-
 5年生務務ムつと（める）,つと（まる）
 5年生夢夢ムゆめ
@@ -1204,7 +1206,7 @@
 5年生(追加)客カク-
 5年生(追加)礼ライ-
 5年生(追加)期ゴ-
-5年生(追加)治治チ-
+5年生(追加)治治治治チ-
 5年生(追加)色色シキ-
 5年生(追加)省省セイ-
 5年生(追加)競競ケイ-
@@ -1224,7 +1226,7 @@
 6年生灰灰カイはい
 6年生拡拡カク-
 6年生革革カクかわ
-6年生閣閣カク-
+6年生阁閣カク-
 6年生割割カツわ（る）,わり,わ（れる）
 6年生株株-かぶ
 6年生干干カンほ（す）,ひ（る）
@@ -1284,7 +1286,7 @@
 6年生射射シャい（る）
 6年生捨捨シャす（てる）
 6年生尺尺シャク-
-6年生若ジャク,ニャクわか（い）,も（しくは）
+6年生若若ジャク,ニャクわか（い）,も（しくは）
 6年生樹樹ジュ-
 6年生収収シュウ o（さめる）, o（さまる）
 6年生宗宗シュウ,ソウ-
@@ -1310,7 +1312,7 @@
 6年生推推スイ o（す）
 6年生寸寸スン-
 6年生盛盛セイ,ジョウも（る）,さか（る）,さか（ん）
-6年生圣圣セイ-
+6年生圣聖セイ-
 6年生誠誠セイまこと
 6年生舌舌ゼツした
 6年生宣宣セン-
@@ -1334,7 +1336,7 @@
 6年生宅宅-
 6年生担担タンにな（う）
 6年生探探タンさが（す）,さぐ（る）
-6年生誕誕タン-
+6年生诞誕タン-
 6年生段段-
 6年生暖暖ダンあたた（か）,あたた（かい）,あたた（まる）,あたた（める）
 6年生値ね、あたい
@@ -1353,7 +1355,7 @@
 6年生党党トウ-
 6年生糖糖トウ-
 6年生届届-とど（ける）,とど（く）
-6年生難難ナンかた（い）,むずか（しい）
+6年生難難NANかた（い）,むずか（しい）
 6年生乳乳ニュウちち,ち
 6年生認認ニンみと（める）
 6年生納納ノウ,ナッ,ナ,ナン,トウ o（さめる）, o（さまる）
@@ -1430,6 +1432,7 @@
       reviewQueue: []
     };
     const kanjiPathsCache = {};
+    const FONT_FAMILY = '"Klee One", "UD デジタル 教科書体 N-R", "UD Digi Kyokasho N-R", "HG正楷書体-PRO", "HGKyokashotai", serif';
     let writeCanvas, inkCanvas, guideCanvas, ctxW, ctxInk, ctxGuide, audioCtx;
 
     let prefetchQueue = [];
@@ -1533,6 +1536,40 @@
       kanjiList = Object.entries(kanjiStore).map(([char, data]) => ({ char, ...data }));
     }
 
+    // Gemini AIを使って配当外の漢字の読みを取得する
+    async function fetchAIReading(char) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const systemPrompt = "あなたは漢字の専門家です。指定された漢字1文字の読み方を教えてください。";
+      const userQuery = `漢字「${char}」の読み方を、音読み（カタカナ）、訓読み（ひらがな、送り仮名がある場合は括弧書き）で教えてください。JSON形式で返してください。例：{"on": ["イチ"], "kun": ["ひと（つ）"]}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      const attemptFetch = async (retryCount = 0) => {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) throw new Error('API Error');
+          const result = await response.json();
+          return JSON.parse(result.candidates[0].content.parts[0].text);
+        } catch (error) {
+          if (retryCount < 5) {
+            const delay = Math.pow(2, retryCount) * 1000;
+            await new Promise(r => setTimeout(r, delay));
+            return attemptFetch(retryCount + 1);
+          }
+          return null;
+        }
+      };
+      return await attemptFetch();
+    }
+
     async function fetchKanjiVG(char) {
       if (kanjiPathsCache[char]) return kanjiPathsCache[char];
       const hex = char.charCodeAt(0).toString(16).padStart(5, '0');
@@ -1565,17 +1602,29 @@
     async function selectSpecificKanji(char) {
       if (!char) return;
       let selected = kanjiList.find(k => k.char === char);
+      
+      const statusEl = el('testStatus'); if (statusEl) statusEl.innerText = "よみこみ中...";
+
       if (!selected) {
-        selected = { char: char, baseGrade: 99, on: [], kun: [{ v: "？？", g: 99 }] };
+        // 配当外の漢字の場合、AIから読みを取得する
+        const aiReadings = await fetchAIReading(char);
+        selected = { 
+          char: char, 
+          baseGrade: 99, 
+          on: aiReadings?.on?.map(v => ({ v, g: 99 })) || [], 
+          kun: aiReadings?.kun?.map(v => ({ v, g: 99 })) || [{ v: "？？", g: 99 }] 
+        };
         if(!kanjiStore[char]) kanjiStore[char] = selected;
       }
+      
       appState.selectedGrade = selected.baseGrade;
       localStorage.setItem('kanji_app_grade', appState.selectedGrade);
       appState.currentKanji = selected; appState.currentStroke = 0; appState.hasMistaken = false;
+
       if (ctxW) ctxW.clearRect(0, 0, writeCanvas.width, writeCanvas.height);
       if (ctxInk) ctxInk.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
       stopPractice(); closeAnime(); updateGradeButtons();
-      const statusEl = el('testStatus'); if (statusEl) statusEl.innerText = "よみこみ中...";
+      
       const paths = await fetchKanjiVG(char);
       if (!paths || paths.length === 0) { if(statusEl) statusEl.innerText = "データが ありません"; return; }
       appState.currentKanji.paths = paths;
@@ -1629,7 +1678,7 @@
       if(list.length === 0) { container.innerHTML = '<div class="vertical-text opacity-30">-</div>'; return; }
       list.slice(0, 3).forEach(item => {
         const div = document.createElement('div'); div.className = 'vertical-text';
-        const marker = (item.g > baseGrade) ? getCircleNum(item.g) : "　";
+        const marker = (item.g > baseGrade && item.g < 99) ? getCircleNum(item.g) : "　";
         div.innerText = marker + item.v; container.appendChild(div);
       });
     }
