@@ -27,6 +27,15 @@
       touch-action: none;
       opacity: 0; 
       transition: opacity 0.5s ease-in-out;
+      -webkit-user-select: none; /* テキスト選択禁止 (Safari) */
+      user-select: none; /* テキスト選択禁止 (標準) */
+      -webkit-touch-callout: none; /* iOSの長押しメニュー禁止 */
+    }
+    
+    /* 入力欄だけは文字が打てるように選択可能にする */
+    input {
+      -webkit-user-select: auto;
+      user-select: auto;
     }
     
     .kyokasho { font-family: inherit; }
@@ -54,50 +63,85 @@
       pointer-events: none; z-index: 1;
     }
     .reading-card {
-      border-radius: 1.25rem;
-      border: 3px solid var(--grid-line);
+      border-radius: 0.75rem;
+      border: 2px solid var(--grid-line);
       background: #ffffff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 6.8rem;
+      width: 4.5rem;
       box-shadow: 0 4px 10px var(--btn-shadow);
       flex-shrink: 0;
+    }
+    @media (min-width: 768px) {
+      .reading-card {
+        border-radius: 1.25rem;
+        border-width: 3px;
+        width: 6.8rem;
+      }
     }
     .reading-columns {
       display: flex;
       flex-direction: row-reverse;
       justify-content: center;
-      gap: 0.25rem;
+      gap: 0.1rem;
       flex: 1;
       width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
     }
+    @media (min-width: 768px) {
+      .reading-columns {
+        gap: 0.25rem;
+      }
+    }
     .vertical-text {
       writing-mode: vertical-rl;
       font-weight: 800;
-      line-height: 1.4;
-      font-size: 1.25rem;
+      line-height: 1.1;
+      font-size: 0.9rem;
       white-space: nowrap;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.05em;
+    }
+    @media (min-width: 768px) {
+      .vertical-text {
+        line-height: 1.4;
+        font-size: 1.25rem;
+        letter-spacing: 0.1em;
+      }
     }
     .btn-action {
       transition: all 0.1s ease;
-      border-bottom-width: 6px;
-      min-height: 56px;
+      border-bottom-width: 4px;
+      min-height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
+    @media (min-width: 768px) {
+      .btn-action {
+        border-bottom-width: 6px;
+        min-height: 56px;
+      }
+    }
     .btn-action:active { transform: translateY(4px); border-bottom-width: 2px; }
     .grade-btn {
-      width: 32px; height: 32px; border-radius: 50%; font-size: 0.9rem; font-weight: 900;
+      width: 24px; height: 24px; border-radius: 50%; font-size: 0.75rem; font-weight: 900;
       display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-      border-bottom: 3px solid #00000020;
+      border-bottom: 2px solid #00000020;
+    }
+    @media (min-width: 768px) {
+      .grade-btn {
+        width: 32px; height: 32px; font-size: 0.9rem; border-bottom-width: 3px;
+      }
     }
     .grade-btn.active {
-      background-color: #6366f1; color: white; transform: scale(1.1); border-bottom: 3px solid #4338ca;
+      background-color: #6366f1; color: white; transform: scale(1.1); border-bottom: 2px solid #4338ca;
+    }
+    @media (min-width: 768px) {
+      .grade-btn.active {
+        border-bottom-width: 3px;
+      }
     }
     #speedSlider {
       -webkit-appearance: none; width: 100%; height: 16px; border-radius: 8px;
@@ -124,12 +168,12 @@
     </div>
   </div>
 
-  <header class="h-16 shrink-0 flex items-center justify-between bg-white px-4 rounded-xl shadow-sm border-b-4 border-slate-200 mb-2 z-10 relative overflow-x-auto scroll-hide">
-    <div class="flex-1 flex items-center justify-center gap-4 md:gap-8 min-w-max">
-      <h1 class="text-xl md:text-3xl font-black text-indigo-600 tracking-tighter shrink-0 drop-shadow-sm">ＡＩかん字マスター</h1>
+  <header class="h-12 md:h-16 shrink-0 flex items-center justify-between bg-white px-2 md:px-4 rounded-xl shadow-sm border-b-2 md:border-b-4 border-slate-200 mb-1 md:mb-2 z-10 relative overflow-x-auto scroll-hide">
+    <div class="flex-1 flex items-center justify-center gap-2 md:gap-8 min-w-max">
+      <h1 class="text-lg md:text-3xl font-black text-indigo-600 tracking-tighter shrink-0 drop-shadow-sm">ＡＩかん字マスター</h1>
       
-      <div class="flex items-center gap-3">
-        <div id="gradeButtons" class="flex gap-1.5 bg-slate-100 p-1.5 rounded-full shadow-inner">
+      <div class="flex items-center gap-2 md:gap-3">
+        <div id="gradeButtons" class="flex gap-1 md:gap-1.5 bg-slate-100 p-1 md:p-1.5 rounded-full shadow-inner">
           <button onclick="changeGrade(1)" id="gb1" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">1</button>
           <button onclick="changeGrade(2)" id="gb2" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">2</button>
           <button onclick="changeGrade(3)" id="gb3" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">3</button>
@@ -138,10 +182,10 @@
           <button onclick="changeGrade(6)" id="gb6" class="grade-btn bg-white text-slate-500 hover:bg-indigo-50">6</button>
         </div>
 
-        <div class="flex items-center gap-1 bg-slate-100 p-1.5 rounded-full border-2 border-transparent focus-within:border-indigo-300 transition-all shadow-inner">
-          <input type="text" id="searchInput" maxlength="1" placeholder="さがす" class="w-10 md:w-14 bg-transparent text-center font-black text-indigo-600 focus:outline-none placeholder:text-slate-300">
-          <button id="searchBtn" class="bg-indigo-500 text-white w-7 h-7 rounded-full flex items-center justify-center hover:bg-indigo-600 active:scale-90 transition-all shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="flex items-center gap-1 bg-slate-100 p-1 md:p-1.5 rounded-full border-2 border-transparent focus-within:border-indigo-300 transition-all shadow-inner">
+          <input type="text" id="searchInput" maxlength="1" placeholder="さがす" class="w-8 md:w-14 text-sm md:text-base bg-transparent text-center font-black text-indigo-600 focus:outline-none placeholder:text-slate-300">
+          <button id="searchBtn" class="bg-indigo-500 text-white w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center hover:bg-indigo-600 active:scale-90 transition-all shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
@@ -149,28 +193,28 @@
       </div>
     </div>
 
-    <div class="bg-amber-100 text-amber-600 px-3 py-1.5 rounded-full font-black text-sm shadow-inner shrink-0 ml-3">
+    <div class="bg-amber-100 text-amber-600 px-2 py-1 md:px-3 md:py-1.5 rounded-full font-black text-xs md:text-sm shadow-inner shrink-0 ml-1 md:ml-3">
       🏆 <span id="masterTotalCount">0</span>
     </div>
   </header>
 
-  <main class="flex-1 flex flex-col md:flex-row gap-2 md:gap-3 min-h-0 overflow-hidden z-10 relative">
-    <section class="flex-1 bg-white rounded-3xl shadow-lg border-4 border-sky-100 flex flex-col p-3 overflow-hidden relative">
-      <div id="infoFrame" class="absolute inset-0 flex flex-col p-3 transition-opacity duration-300">
-        <div class="text-center shrink-0 mb-2 mt-0" id="currentGradeLabelContainer">
-          <div id="currentGradeLabel" class="text-indigo-500 font-black text-lg md:text-xl tracking-widest leading-none">１ねんせいでならうかん字</div>
+  <main class="flex-1 flex flex-col md:flex-row gap-1 md:gap-3 min-h-0 overflow-hidden z-10 relative">
+    <section class="flex-1 bg-white rounded-2xl md:rounded-3xl shadow-lg border-2 md:border-4 border-sky-100 flex flex-col p-1.5 md:p-3 overflow-hidden relative">
+      <div id="infoFrame" class="absolute inset-0 flex flex-col p-1.5 md:p-3 transition-opacity duration-300">
+        <div class="text-center shrink-0 mb-0.5 md:mb-2 mt-0" id="currentGradeLabelContainer">
+          <div id="currentGradeLabel" class="text-indigo-500 font-black text-sm md:text-xl tracking-widest leading-none">１ねんせいでならうかん字</div>
         </div>
 
-        <div id="infoLabel" class="flex justify-end items-center mb-1 shrink-0">
-          <div class="bg-indigo-600 px-5 py-2 rounded-2xl text-white shadow-md flex items-baseline gap-1">
-            <span id="strokeCountText" class="text-2xl md:text-3xl font-black">-</span>
-            <span class="text-sm font-bold opacity-90">画</span>
+        <div id="infoLabel" class="flex justify-end items-center mb-0.5 md:mb-1 shrink-0">
+          <div class="bg-indigo-600 px-3 py-0.5 md:px-5 md:py-2 rounded-xl md:rounded-2xl text-white shadow-md flex items-baseline gap-0.5 md:gap-1">
+            <span id="strokeCountText" class="text-lg md:text-3xl font-black">-</span>
+            <span class="text-xs md:text-sm font-bold opacity-90">画</span>
           </div>
         </div>
         
-        <div class="flex-1 flex items-center justify-center min-h-0 gap-3 w-full py-1 mx-auto max-w-[800px]">
+        <div class="flex-1 flex items-center justify-center min-h-0 gap-1 md:gap-3 w-full py-0.5 md:py-1 mx-auto max-w-[800px]">
           <div id="kunCard" class="reading-card border-sky-100 text-sky-700 h-full max-h-[420px]">
-            <span class="text-xs font-black my-2 bg-sky-50 text-sky-600 px-3 py-1 rounded-full border border-sky-200 shrink-0">くんよみ</span>
+            <span class="text-[10px] md:text-xs font-black my-1 md:my-2 bg-sky-50 text-sky-600 px-1.5 py-0.5 md:px-3 md:py-1 rounded-full border border-sky-200 shrink-0">くんよみ</span>
             <div id="kunReadings" class="reading-columns scroll-hide w-full flex-1"></div>
           </div>
           
@@ -182,27 +226,27 @@
           </div>
           
           <div id="onCard" class="reading-card border-rose-100 text-rose-700 h-full max-h-[420px]">
-            <span class="text-xs font-black my-2 bg-rose-50 text-rose-600 px-3 py-1 rounded-full border border-rose-200 shrink-0">おんよみ</span>
+            <span class="text-[10px] md:text-xs font-black my-1 md:my-2 bg-rose-50 text-rose-600 px-1.5 py-0.5 md:px-3 md:py-1 rounded-full border border-rose-200 shrink-0">おんよみ</span>
             <div id="onReadings" class="reading-columns scroll-hide w-full flex-1"></div>
           </div>
         </div>
 
-        <div id="practiceControls" class="mt-2 shrink-0 flex flex-col gap-1">
-          <button id="submitBtn" class="bg-sky-400 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-sky-600 btn-action hover:bg-sky-500">
+        <div id="practiceControls" class="mt-1 md:mt-2 shrink-0 flex flex-col gap-1">
+          <button id="submitBtn" class="bg-sky-400 text-white py-1.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-xl font-black shadow-lg border-b-4 md:border-b-6 border-sky-600 btn-action hover:bg-sky-500">
             つぎの かん字 ➡
           </button>
-          <button id="showAnimeBtn" class="hidden bg-rose-500 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-rose-700 btn-action hover:bg-rose-600 animate-pulse">
+          <button id="showAnimeBtn" class="hidden bg-rose-500 text-white py-1.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-xl font-black shadow-lg border-b-4 md:border-b-6 border-rose-700 btn-action hover:bg-rose-600 animate-pulse">
             👀 かきじゅんをみる
           </button>
         </div>
       </div>
 
-      <div id="animeFrame" class="hidden absolute inset-0 flex flex-col bg-sky-50 z-20 p-3">
-        <div class="flex justify-between items-center mb-2 shrink-0">
-          <span class="text-xs font-bold text-sky-500 bg-white px-3 py-1 rounded-full shadow-sm">かきじゅん</span>
-          <button id="closeAnimeBtn" class="bg-white text-slate-500 px-3 py-1 rounded-full font-bold text-xs border-2 border-slate-200 hover:text-rose-500 shadow-sm">✕ もどる</button>
+      <div id="animeFrame" class="hidden absolute inset-0 flex flex-col bg-sky-50 z-20 p-1.5 md:p-3">
+        <div class="flex justify-between items-center mb-1 md:mb-2 shrink-0">
+          <span class="text-[10px] md:text-xs font-bold text-sky-500 bg-white px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-sm">かきじゅん</span>
+          <button id="closeAnimeBtn" class="bg-white text-slate-500 px-2 py-0.5 md:px-3 md:py-1 rounded-full font-bold text-[10px] md:text-xs border-2 border-slate-200 hover:text-rose-500 shadow-sm">✕ もどる</button>
         </div>
-        <div class="flex-1 flex items-center justify-center min-h-0 w-full py-1">
+        <div class="flex-1 flex items-center justify-center min-h-0 w-full py-0.5 md:py-1">
           <div class="h-full aspect-square max-h-[420px]">
             <div class="kanji-grid border-sky-300 bg-white">
               <div class="grid-line-v"></div><div class="grid-line-h"></div>
@@ -214,31 +258,31 @@
             </div>
           </div>
         </div>
-        <div class="mt-2 bg-white p-3 rounded-xl shadow-sm border-2 border-sky-100 flex flex-col gap-2 shrink-0">
-          <div class="flex items-center gap-4 w-full">
-            <button id="playBtn" class="shrink-0 bg-sky-400 text-white w-12 h-12 rounded-full font-bold text-2xl flex items-center justify-center shadow-lg border-b-4 border-sky-600 btn-action">▶</button>
+        <div class="mt-1 md:mt-2 bg-white p-1.5 md:p-3 rounded-lg md:rounded-xl shadow-sm border-2 border-sky-100 flex flex-col gap-1 md:gap-2 shrink-0">
+          <div class="flex items-center gap-2 md:gap-4 w-full">
+            <button id="playBtn" class="shrink-0 bg-sky-400 text-white w-8 h-8 md:w-12 md:h-12 rounded-full font-bold text-sm md:text-2xl flex items-center justify-center shadow-lg border-b-2 md:border-b-4 border-sky-600 btn-action">▶</button>
             <div class="flex-1 flex flex-col">
               <input type="range" id="speedSlider" min="1" max="10" value="5" class="w-full">
-              <div class="flex justify-between text-[10px] text-sky-400 font-bold mt-1 px-1">
+              <div class="flex justify-between text-[8px] md:text-[10px] text-sky-400 font-bold mt-1 px-1">
                 <span>🐢 ゆっくり</span>
                 <span>はやい 🐇</span>
               </div>
             </div>
           </div>
         </div>
-        <button id="skipToNextBtn" class="mt-2 bg-sky-400 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-sky-600 btn-action hover:bg-sky-500 shrink-0">
+        <button id="skipToNextBtn" class="mt-1 md:mt-2 bg-sky-400 text-white py-1.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-xl font-black shadow-lg border-b-4 md:border-b-6 border-sky-600 btn-action hover:bg-sky-500 shrink-0">
           つぎの かん字 ➡
         </button>
       </div>
     </section>
 
-    <section id="writeSection" class="flex-1 bg-white rounded-3xl shadow-lg border-4 border-orange-100 flex flex-col p-3 relative overflow-hidden">
-      <div class="flex justify-between items-center mb-1 shrink-0">
-        <span class="text-xs font-bold text-orange-400 tracking-widest bg-orange-50 px-3 py-1 rounded-full">なぞりがき</span>
-        <span id="testStatus" class="text-xs font-black text-slate-400 bg-slate-100 px-3 py-1 rounded-full shadow-inner">ロック中 🔒</span>
+    <section id="writeSection" class="flex-1 bg-white rounded-2xl md:rounded-3xl shadow-lg border-2 md:border-4 border-orange-100 flex flex-col p-1.5 md:p-3 relative overflow-hidden">
+      <div class="flex justify-between items-center mb-0.5 md:mb-1 shrink-0">
+        <span class="text-[10px] md:text-xs font-bold text-orange-400 tracking-widest bg-orange-50 px-2 py-0.5 md:px-3 md:py-1 rounded-full">なぞりがき</span>
+        <span id="testStatus" class="text-[10px] md:text-xs font-black text-slate-400 bg-slate-100 px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-inner">ロック中 🔒</span>
       </div>
       
-      <div id="writeArea" class="flex-1 flex items-center justify-center min-h-0 relative locked w-full py-1">
+      <div id="writeArea" class="flex-1 flex items-center justify-center min-h-0 relative locked w-full py-0.5 md:py-1">
         <div class="h-full aspect-square max-h-[420px]">
           <div id="writeGrid" class="kanji-grid border-orange-300">
             <div class="grid-line-v"></div><div class="grid-line-h"></div>
@@ -249,34 +293,34 @@
         </div>
       </div>
       
-      <div class="mt-2 flex gap-2 shrink-0">
-        <button id="clearBtn" class="flex-[1] bg-orange-50 text-orange-500 py-2 rounded-xl font-bold border-b-6 border-orange-200 btn-action locked flex flex-col leading-tight">
-          <span class="text-base">やりなおし</span>
-          <span class="text-[10px] opacity-70">最初から</span>
+      <div class="mt-1 md:mt-2 flex gap-1 md:gap-2 shrink-0">
+        <button id="clearBtn" class="flex-[1] bg-orange-50 text-orange-500 py-1 md:py-2 rounded-lg md:rounded-xl font-bold border-b-4 md:border-b-6 border-orange-200 btn-action locked flex flex-col leading-tight">
+          <span class="text-xs md:text-base">やりなおし</span>
+          <span class="text-[8px] md:text-[10px] opacity-70">最初から</span>
         </button>
-        <button id="startPracticeBtn" class="flex-[2] bg-orange-400 text-white py-3 rounded-xl text-xl font-black shadow-lg border-b-6 border-orange-600 btn-action hover:bg-orange-500">
+        <button id="startPracticeBtn" class="flex-[2] bg-orange-400 text-white py-1.5 md:py-3 rounded-lg md:rounded-xl text-sm md:text-xl font-black shadow-lg border-b-4 md:border-b-6 border-orange-600 btn-action hover:bg-orange-500">
           れんしゅうする！
         </button>
       </div>
     </section>
   </main>
 
-  <footer class="h-32 md:h-36 shrink-0 bg-white border-t-4 border-slate-100 flex flex-col px-3 py-1 z-10 relative">
-    <div class="flex-1 flex items-center gap-3 min-h-0">
+  <footer class="h-14 md:h-36 shrink-0 bg-white border-t-2 md:border-t-4 border-slate-100 flex flex-col px-2 md:px-3 py-0.5 md:py-1 z-10 relative">
+    <div class="flex-1 flex items-center gap-1.5 md:gap-3 min-h-0">
       <div class="flex flex-col items-center shrink-0">
-        <div class="bg-amber-100 text-amber-600 border-b-4 border-amber-300 rounded-xl px-3 py-1.5 font-black text-xs text-center shadow-sm">
-          マスターした<br>かん字
+        <div class="bg-amber-100 text-amber-600 border-b-2 md:border-b-4 border-amber-300 rounded-lg md:rounded-xl px-1.5 py-0.5 md:px-3 md:py-1.5 font-black text-[10px] md:text-xs text-center shadow-sm leading-tight">
+          マスター<span class="hidden md:inline">した<br>かん字</span>
         </div>
-        <div id="gradeProgress" class="mt-1 text-[10px] font-black text-slate-500 tracking-tighter">
+        <div id="gradeProgress" class="mt-0.5 md:mt-1 text-[9px] md:text-[10px] font-black text-slate-500 tracking-tighter">
           - / - 字
         </div>
       </div>
-      <div id="masteredList" class="flex-1 flex flex-wrap gap-1.5 overflow-y-auto h-full content-start items-start py-1 scroll-hide"></div>
+      <div id="masteredList" class="flex-1 flex flex-row md:flex-wrap gap-1 overflow-x-auto md:overflow-x-hidden overflow-y-hidden md:overflow-y-auto h-full content-center md:content-start items-center md:items-start py-0.5 md:py-1 scroll-hide"></div>
       <div class="shrink-0">
-        <button id="resetAllBtn" class="text-[9px] text-slate-300 hover:text-rose-400 underline font-bold px-1">リセット</button>
+        <button id="resetAllBtn" class="text-[8px] md:text-[9px] text-slate-300 hover:text-rose-400 underline font-bold px-1">リセット</button>
       </div>
     </div>
-    <div class="text-center text-[9px] text-slate-300 font-bold py-0.5 select-none pointer-events-none">
+    <div class="text-center text-[8px] md:text-[9px] text-slate-300 font-bold py-0 md:py-0.5 select-none pointer-events-none">
       ©2026　ＡＩかん字マスター　ＩＣＴ支援の杜
     </div>
   </footer>
@@ -579,7 +623,7 @@
       ctxInk.clearRect(0,0,inkCanvas.width, inkCanvas.height); ctxW.clearRect(0,0,writeCanvas.width, writeCanvas.height);
       const wa = el('writeArea'); if (wa) wa.classList.remove('locked');
       const cb = el('clearBtn'); if (cb) cb.classList.remove('locked');
-      const statusEl = el('testStatus'); if (statusEl) { statusEl.innerText = "１かくめ をかこう！"; statusEl.className = "text-sm font-black text-white bg-orange-400 px-4 py-1.5 rounded-full shadow-md"; }
+      const statusEl = el('testStatus'); if (statusEl) { statusEl.innerText = "１かくめ をかこう！"; statusEl.className = "text-[10px] md:text-xs font-black text-white bg-orange-400 px-2 py-0.5 md:px-4 md:py-1.5 rounded-full shadow-md"; }
       playTone(440, 'sine', 0.1);
     }
 
@@ -591,7 +635,7 @@
       ['kunCard', 'onCard', 'practiceControls'].forEach(id => setDisplay(id, 'flex'));
       setDisplay('currentGradeLabelContainer', 'block');
       const infoLabel = el('infoLabel'); if (infoLabel) infoLabel.style.visibility = 'visible';
-      const statusEl = el('testStatus'); if (statusEl) { statusEl.innerText = "ロック中 🔒"; statusEl.className = "text-sm font-black text-slate-400 bg-slate-100 px-4 py-1.5 rounded-full shadow-inner"; }
+      const statusEl = el('testStatus'); if (statusEl) { statusEl.innerText = "ロック中 🔒"; statusEl.className = "text-[10px] md:text-xs font-black text-slate-400 bg-slate-100 px-2 py-0.5 md:px-4 md:py-1.5 rounded-full shadow-inner"; }
       const spBtn = el('startPracticeBtn'); if (spBtn) spBtn.classList.remove('hidden');
       const saBtn = el('showAnimeBtn'); if (saBtn) saBtn.classList.add('hidden');
       const sbBtn = el('submitBtn'); if (sbBtn) sbBtn.classList.remove('hidden');
@@ -599,7 +643,7 @@
 
     function handleMistake(msg) {
       appState.hasMistaken = true; const statusEl = el('testStatus'); if (!statusEl) return;
-      statusEl.innerText = msg; statusEl.className = "text-sm font-black text-white bg-rose-400 px-4 py-1.5 rounded-full shadow-md";
+      statusEl.innerText = msg; statusEl.className = "text-[10px] md:text-xs font-black text-white bg-rose-400 px-2 py-0.5 md:px-4 md:py-1.5 rounded-full shadow-md";
       playBuzzer(); setDisplay('practiceControls', 'flex');
       const sbBtn = el('submitBtn'); if (sbBtn) sbBtn.classList.add('hidden');
       const saBtn = el('showAnimeBtn'); if (saBtn) saBtn.classList.remove('hidden');
@@ -654,7 +698,7 @@
           setDisplay('practiceControls', 'flex'); const sbBtn = el('submitBtn'); if (sbBtn) sbBtn.classList.remove('hidden'); const saBtn = el('showAnimeBtn'); if (saBtn) saBtn.classList.add('hidden');
           const statusEl = el('testStatus');
           if (!appState.hasMistaken) {
-            if (statusEl) { statusEl.innerText = "💮 クリア！"; statusEl.className = "text-sm font-black text-white bg-emerald-500 px-4 py-1.5 rounded-full shadow-lg"; }
+            if (statusEl) { statusEl.innerText = "💮 クリア！"; statusEl.className = "text-[10px] md:text-xs font-black text-white bg-emerald-500 px-2 py-0.5 md:px-4 md:py-1.5 rounded-full shadow-lg"; }
             playFanfare(); burstConfetti(); showExcellentPopup();
             if (!appState.mastered.includes(appState.currentKanji.char)) { 
               appState.mastered.push(appState.currentKanji.char); localStorage.setItem('kanji_app_mastered_list', JSON.stringify(appState.mastered)); 
@@ -662,7 +706,7 @@
               setTimeout(() => { hideExcellentPopup(); flyToCollection(appState.currentKanji.char); }, 1500);
             } else { appState.reviewQueue = appState.reviewQueue.filter(q => q.char !== appState.currentKanji.char); setTimeout(() => { hideExcellentPopup(); renderMasteredList(); }, 1500); }
           } else {
-            if (statusEl) { statusEl.innerText = "つぎは いっかいで かこう！"; statusEl.className = "text-sm font-black text-white bg-orange-500 px-4 py-1.5 rounded-full shadow-lg"; }
+            if (statusEl) { statusEl.innerText = "つぎは いっかいで かこう！"; statusEl.className = "text-[10px] md:text-xs font-black text-white bg-orange-500 px-2 py-0.5 md:px-4 md:py-1.5 rounded-full shadow-lg"; }
             playPingPong(); const existing = appState.reviewQueue.find(q => q.char === appState.currentKanji.char);
             if (existing) existing.wait = 3; else appState.reviewQueue.push({ char: appState.currentKanji.char, wait: 3 });
           }
@@ -685,6 +729,10 @@
       el('searchBtn').onclick = triggerSearch; el('searchInput').onkeypress = (e) => { if (e.key === 'Enter') triggerSearch(); };
       const slider = el('speedSlider'); if (slider) slider.addEventListener('input', updateSliderBg);
       const preventDefault = (e) => { e.preventDefault(); };
+      
+      // 右クリック（コンテキストメニュー）を禁止
+      window.addEventListener('contextmenu', preventDefault);
+
       writeCanvas.addEventListener('mousedown', startDraw); writeCanvas.addEventListener('mousemove', draw); writeCanvas.addEventListener('mouseup', endDraw); writeCanvas.addEventListener('mouseleave', endDraw);
       writeCanvas.addEventListener('touchstart', (e) => { preventDefault(e); startDraw(e); }, {passive: false}); writeCanvas.addEventListener('touchmove', (e) => { preventDefault(e); draw(e); }, {passive: false}); writeCanvas.addEventListener('touchend', endDraw, {passive: false});
     }
@@ -696,7 +744,7 @@
       const progressEl = el('gradeProgress'); if (progressEl) { if (appState.selectedGrade <= 6) progressEl.innerText = `${masteredInGradeCount} ／ ${totalInGrade} 字`; else progressEl.innerText = "とくべつ"; }
       const masteredToShow = appState.mastered.filter(char => { const kData = kanjiStore[char]; if (appState.selectedGrade <= 6) return kData && kData.baseGrade === appState.selectedGrade; return !kData || kData.baseGrade > 6; }).reverse();
       masteredToShow.forEach(c => {
-        const d = document.createElement('div'); d.className = 'w-8 h-8 md:w-9 md:h-9 bg-white border-2 border-amber-300 rounded-full flex items-center justify-center kyokasho text-sm md:text-base font-black text-amber-700 shadow-sm shrink-0'; d.innerText = c; container.appendChild(d);
+        const d = document.createElement('div'); d.className = 'w-6 h-6 md:w-9 md:h-9 bg-white border-2 border-amber-300 rounded-full flex items-center justify-center kyokasho text-[10px] md:text-base font-black text-amber-700 shadow-sm shrink-0'; d.innerText = c; container.appendChild(d);
       });
       const countEl = el('masterTotalCount'); if (countEl) countEl.textContent = appState.mastered.length;
     }
